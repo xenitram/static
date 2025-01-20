@@ -1,29 +1,56 @@
 const dom = function() {
-    const byId = (lbl) => document.getElementById(lbl);
 
-    const byName = (lbl) => document.getElementsByName(lbl);
 
-    const byClass = (el = document, lbl) => (lbl != undefined) ?
+    const byId = (lbl) => {
+        if (!lbl || typeof lbl !== 'string') {
+            throw new Error("Invalid argument: `lbl` must be a non-empty string");
+        }
+        return document.getElementById(lbl);
+    };
+
+    const byName = (lbl) => {
+        if (!lbl || typeof lbl !== 'string') {
+            throw new Error("Invalid argument: `lbl` must be a non-empty string");
+        }
+        return document.getElementsByName(lbl);
+    };
+
+
+    const byClass = (el = document, lbl) =>
+        lbl !== undefined ?
         el.getElementsByClassName(lbl) :
         (lbl) => el.getElementsByClassName(lbl);
 
-    const byTag = (el = document, lbl) => (lbl != undefined) ?
+    const byTag = (el = document, lbl) =>
+        lbl !== undefined ?
         el.getElementsByTagName(lbl) :
         (lbl) => el.getElementsByTagName(lbl);
 
-
-    const byTagNS = (el = document, lbl) => (lbl != undefined) ?
+    const byTagNS = (el = document, lbl) =>
+        lbl !== undefined ?
         el.getElementsByTagNameNS(lbl) :
         (lbl) => el.getElementsByTagNameNS(lbl);
 
 
-    const $ = (el = document, lbl) => (lbl != undefined) ?
-        el.querySelector(lbl) :
-        (lbl) => el.querySelector(lbl);
 
-    const $$ = (el = document, lbl) => (lbl != undefined) ?
-        el.querySelectorAll(lbl) :
-        (lbl) => el.querySelectorAll(lbl);
+    const $ = (el = document, lbl) =>
+        typeof el === 'string' ?
+        document.querySelector(el) // Called with just a selector: $$('.class')
+        :
+        lbl !== undefined ?
+        el.querySelector(lbl) // Called with a context and a selector: $$(container, '.class')
+        :
+        (selector) => el.querySelector(selector); // Called with just a context: $$(container)
+
+
+    const $$ = (el = document, lbl) =>
+        typeof el === 'string' ?
+        document.querySelectorAll(el) // Called with just a selector: $$('.class')
+        :
+        lbl !== undefined ?
+        el.querySelectorAll(lbl) // Called with a context and a selector: $$(container, '.class')
+        :
+        (selector) => el.querySelectorAll(selector); // Called with just a context: $$(container)
 
 
 
@@ -39,61 +66,6 @@ const dom = function() {
     const replaceWith = (el = document.body, elem) => elem ? el.replaceWith(elem) : e => el.replaceWith(e);
 
     const replaceChildren = (el = document.body, ...elems) => elems.length ? el.replaceChildren(...elems.flat(Infinity)) : (...e) => el.replaceChildren(...e.flat(Infinity));
-
-
-    /*class Mount{
-    		constructor(elem=document.body){
-    		this.elem=(typeof elem==='string')? byId(elem):elem;
-    		}
-    		
-    	first(...elems){
-    		elems=elems.flat(Infinity);
-    		this.elem.prepend(...elems)
-    		return this;
-    	}
-
-    	last(...elems){
-    		elems=elems.flat(Infinity);
-    		this.elem.append(...elems)
-    		return this;
-    	}
-    	before(...elems){
-    		elems=elems.flat(Infinity);
-    		this.elem.before(...elems)
-    		return this;	
-    		
-    	}
-    	
-    	after(...elems){
-    		elems=elems.flat(Infinity);
-    		this.elem.after(...elems)
-    		return this;
-    	}
-
-    	detach(){return this.elem.remove();}
-    	
-    	replace(elem){
-    		this.elem.replaceWith(elem)
-    		return new Mount(elem);
-    	}
-    	
-    	children(...elems){
-    		this.elem.replaceChildren(...elems)
-    		return this;
-    		
-    	}
-    }
-
-    const mount=function(elem=document.body){
-    	return new Mount(elem);
-    }
-    mount.first=function(...el){return mount().first(...el)}
-    mount.last=function(...el){return mount().last(...el)}
-    mount.before=function(...el){return mount().before(...el)}
-    mount.after=function(...el){return mount().after(...el)}
-    mount.children=function(...el){return mount().children(...el)}
-    */
-
 
     function html(sel, ...args) {
         // Split the selector string by '.' or '#' into element, id, and classes
@@ -258,9 +230,6 @@ const dom = function() {
         });
     }
 
-
-
-
     const animation = {
 
         "promise": function promise(nodes, action, onEnd, options = {}) {
@@ -398,14 +367,130 @@ const dom = function() {
             };
         }
     }
+
+    const css = {
+        addClass: (el, ...classes) => {
+            el.classList.add(...classes.flat());
+            return el;
+        },
+
+        removeClass: (el, ...classes) => {
+            el.classList.remove(...classes.flat());
+            return el;
+        },
+
+        toggleClass: (el, className, force) => {
+            el.classList.toggle(className, force);
+            return el;
+        },
+
+        hasClass: (el, className) => {
+            return el.classList.contains(className);
+        },
+
+        setStyle: (el, styles) => {
+            Object.assign(el.style, styles);
+            return el;
+        },
+
+        getStyle: (el, property) => {
+            return window.getComputedStyle(el).getPropertyValue(property);
+        },
+
+        addStylesheet: (styles, id) => {
+            let styleEl = id ? document.getElementById(id) : null;
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                if (id) styleEl.id = id;
+                document.head.appendChild(styleEl);
+            }
+            styleEl.textContent += styles;
+            return styleEl;
+        },
+
+        setCSSVariable: (el, varName, value) => {
+            el.style.setProperty(`--${varName}`, value);
+            return el;
+        },
+
+        getCSSVariable: (el, varName) => {
+            return window.getComputedStyle(el).getPropertyValue(`--${varName}`).trim();
+        }
+    };
+
+    const attr = {
+        setAttr: (el, attrs) => {
+            Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+            return el;
+        },
+
+        getAttr: (el, attrName) => {
+            return el.getAttribute(attrName);
+        },
+
+        removeAttr: (el, ...attrNames) => {
+            attrNames.flat().forEach(attrName => el.removeAttribute(attrName));
+            return el;
+        },
+
+        hasAttr: (el, attrName) => {
+            return el.hasAttribute(attrName);
+        },
+
+        toggleAttr: (el, attrName, value = null) => {
+            if (el.hasAttribute(attrName)) {
+                el.removeAttribute(attrName);
+            } else {
+                el.setAttribute(attrName, value !== null ? value : "");
+            }
+            return el;
+        }
+    };
+
+    const dataAttr = {
+        setData: (el, key, value) => {
+            el.dataset[key] = value;
+            return el;
+        },
+
+        getData: (el, key) => {
+            return el.dataset[key];
+        },
+
+        removeData: (el, key) => {
+            delete el.dataset[key];
+            return el;
+        },
+    };
+
     return {
+        get: {
+            byId,
+            byName,
+            byClass,
+            byTag,
+            byTagNS
+        },
         byId,
         byName,
         byClass,
         byTag,
         byTagNS,
+        query: {
+            $,
+            $$
+        },
         $,
         $$,
+        mount: {
+            first,
+            last,
+            before,
+            after,
+            detach,
+            replaceWith,
+            replaceChildren
+        },
         first,
         last,
         before,
@@ -413,10 +498,17 @@ const dom = function() {
         detach,
         replaceWith,
         replaceChildren,
+        create: {
+            html,
+            svg
+        },
         html,
         svg,
         event,
         animate,
-        animation
+        animation,
+        css,
+        attr,
+        dataAttr
     }
 }();
