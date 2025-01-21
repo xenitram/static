@@ -367,22 +367,22 @@ const byId = (id) => {
     }
 
     const css = {
-        addClass: (el, ...classes) => {
+        add: (el, ...classes) => {
             el.classList.add(...classes.flat());
             return el;
         },
 
-        removeClass: (el, ...classes) => {
+        remove: (el, ...classes) => {
             el.classList.remove(...classes.flat());
             return el;
         },
 
-        toggleClass: (el, className, force) => {
+        toggle: (el, className, force) => {
             el.classList.toggle(className, force);
             return el;
         },
 
-        hasClass: (el, className) => {
+        has: (el, className) => {
             return el.classList.contains(className);
         },
 
@@ -417,25 +417,25 @@ const byId = (id) => {
     };
 
     const attr = {
-        setAttr: (el, attrs) => {
+        set: (el, attrs) => {
             Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
             return el;
         },
 
-        getAttr: (el, attrName) => {
+        get: (el, attrName) => {
             return el.getAttribute(attrName);
         },
 
-        removeAttr: (el, ...attrNames) => {
+        remove: (el, ...attrNames) => {
             attrNames.flat().forEach(attrName => el.removeAttribute(attrName));
             return el;
         },
 
-        hasAttr: (el, attrName) => {
+        has: (el, attrName) => {
             return el.hasAttribute(attrName);
         },
 
-        toggleAttr: (el, attrName, value = null) => {
+        toggle: (el, attrName, value = null) => {
             if (el.hasAttribute(attrName)) {
                 el.removeAttribute(attrName);
             } else {
@@ -446,16 +446,16 @@ const byId = (id) => {
     };
 
     const dataAttr = {
-        setData: (el, key, value) => {
+        set: (el, key, value) => {
             el.dataset[key] = value;
             return el;
         },
 
-        getData: (el, key) => {
+        get: (el, key) => {
             return el.dataset[key];
         },
 
-        removeData: (el, key) => {
+        remove: (el, key) => {
             delete el.dataset[key];
             return el;
         },
