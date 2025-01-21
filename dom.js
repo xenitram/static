@@ -3,12 +3,12 @@ const dom = function() {
 
 const isElement = (el) => el instanceof Element || el instanceof Document;
 
-    const byId = (id) => {
-        if (typeof id !== 'string' || !id.trim()) {
-            throw new Error("Invalid id: must be a non-empty string");
-        }
-        return document.getElementById(id);
-    };
+const byId = (id) => {
+    if (typeof id !== 'string' || !id.trim()) {
+        throw new Error("Invalid id: must be a non-empty string");
+    }
+    return document.getElementById(id);
+};
 
     const byName = (lbl) => {
         if (!lbl || typeof lbl !== 'string') {
@@ -65,6 +65,56 @@ const isElement = (el) => el instanceof Element || el instanceof Document;
 
     const replaceChildren = (el = document.body, ...elems) => elems.length ? el.replaceChildren(...elems.flat(Infinity)) : (...e) => el.replaceChildren(...e.flat(Infinity));
 
+const attr = {
+    set: (el, attrs, namespace = null) => {
+        Object.entries(attrs).forEach(([key, value]) => {
+	    if(el instanceof HTMLElement && key in el){
+                    // If it's a known property, set it directly
+                    element[key] = value;		
+	    }else{
+            	if (namespace) {
+               	 el.setAttributeNS(namespace, key, value);
+           	 } else {
+              	  el.setAttribute(key, value);
+           	 }
+	   }
+        });
+        return el;
+    },
+
+
+    get: (el, attrName, namespace = null) => {
+        return namespace ? el.getAttributeNS(namespace, attrName) : el.getAttribute(attrName);
+    },
+
+    remove: (el, attrNames, namespace = null) => {
+        attrNames.flat().forEach(attrName => {
+            if (namespace) {
+                el.removeAttributeNS(namespace, attrName);
+            } else {
+                el.removeAttribute(attrName);
+            }
+        });
+        return el;
+    },
+
+    has: (el, attrName, namespace = null) => {
+        return namespace ? el.hasAttributeNS(namespace, attrName) : el.hasAttribute(attrName);
+    },
+
+    toggle: (el, attrName, value = null, namespace = null) => {
+        if (namespace ? el.hasAttributeNS(namespace, attrName) : el.hasAttribute(attrName)) {
+            namespace ? el.removeAttributeNS(namespace, attrName) : el.removeAttribute(attrName);
+        } else {
+            namespace
+                ? el.setAttributeNS(namespace, attrName, value !== null ? value : "")
+                : el.setAttribute(attrName, value !== null ? value : "");
+        }
+        return el;
+    }
+};
+
+
     function html(sel, ...args) {
         // Split the selector string by '.' or '#' into element, id, and classes
         const chunks = sel.split(/([.#@])/);
@@ -87,19 +137,6 @@ const isElement = (el) => el instanceof Element || el instanceof Document;
             }
         }
 
-        // Set other attributes from the attrs argument
-        function setAttribute(attrs) {
-            for (let val in attrs) {
-                if (val in element) {
-                    // If it's a known property, set it directly
-                    element[val] = attrs[val];
-                } else {
-                    // Otherwise, use setAttribute to set it as an attribute
-                    element.setAttribute(val, attrs[val]);
-                }
-            }
-        }
-
         args.forEach(arg => {
             // Append the content (arg) to the element
             if (arg instanceof Node) {
@@ -109,7 +146,8 @@ const isElement = (el) => el instanceof Element || el instanceof Document;
             } else if (typeof arg === "string" || typeof arg === "number") {
                 element.append(document.createTextNode(arg));
             } else if (typeof arg === "object") {
-                setAttribute(arg);
+                //setAttribute(element,arg);
+		attr.set(element,arg);
             }
         });
         // Return the element with the set attributes, ID, and classes
@@ -140,21 +178,6 @@ const isElement = (el) => el instanceof Element || el instanceof Document;
             }
         }
 
-        // Set other attributes from the args argument
-        function setAttribute(attrs) {
-            for (let key in attrs) {
-                if (attrs.hasOwnProperty(key)) {
-                    // Use `setAttributeNS` for SVG-specific attributes (like `xlink:href`)
-                    if (key === 'xlink:href') {
-                        element.setAttributeNS("http://www.w3.org/1999/xlink", key, attrs[key]);
-                    } else {
-                        element.setAttribute(key, attrs[key]);
-                    }
-                }
-            }
-        }
-
-
         // Iterate through args to append content or set attributes
         args.forEach(arg => {
             if (arg instanceof Node) {
@@ -168,7 +191,8 @@ const isElement = (el) => el instanceof Element || el instanceof Document;
                 element.append(document.createTextNode(arg));
             } else if (typeof arg === "object") {
                 // Handle object as attributes
-                setAttribute(arg);
+                //setAttribute(element,arg);
+		attr.set(element,arg,'http://www.w3.org/1999/xlink');
             }
         });
 
@@ -416,34 +440,8 @@ const isElement = (el) => el instanceof Element || el instanceof Document;
         }
     };
 
-    const attr = {
-        set: (el, attrs) => {
-            Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
-            return el;
-        },
 
-        get: (el, attrName) => {
-            return el.getAttribute(attrName);
-        },
 
-        remove: (el, ...attrNames) => {
-            attrNames.flat().forEach(attrName => el.removeAttribute(attrName));
-            return el;
-        },
-
-        has: (el, attrName) => {
-            return el.hasAttribute(attrName);
-        },
-
-        toggle: (el, attrName, value = null) => {
-            if (el.hasAttribute(attrName)) {
-                el.removeAttribute(attrName);
-            } else {
-                el.setAttribute(attrName, value !== null ? value : "");
-            }
-            return el;
-        }
-    };
 
     const dataAttr = {
         set: (el, key, value) => {
