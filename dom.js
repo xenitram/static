@@ -1,12 +1,14 @@
+
 const dom = function() {
 
+const isElement = (el) => el instanceof Element || el instanceof Document;
 
-    const byId = (lbl) => {
-        if (!lbl || typeof lbl !== 'string') {
-            throw new Error("Invalid argument: `lbl` must be a non-empty string");
-        }
-        return document.getElementById(lbl);
-    };
+const byId = (id) => {
+    if (typeof id !== 'string' || !id.trim()) {
+        throw new Error("Invalid id: must be a non-empty string");
+    }
+    return document.getElementById(id);
+};
 
     const byName = (lbl) => {
         if (!lbl || typeof lbl !== 'string') {
@@ -31,8 +33,6 @@ const dom = function() {
         el.getElementsByTagNameNS(lbl) :
         (lbl) => el.getElementsByTagNameNS(lbl);
 
-
-
     const $ = (el = document, lbl) =>
         typeof el === 'string' ?
         document.querySelector(el) // Called with just a selector: $$('.class')
@@ -51,8 +51,6 @@ const dom = function() {
         el.querySelectorAll(lbl) // Called with a context and a selector: $$(container, '.class')
         :
         (selector) => el.querySelectorAll(selector); // Called with just a context: $$(container)
-
-
 
     const first = prepend = (el = document.body, ...elems) => (elems.length ? el.prepend(...elems.flat(Infinity)) : (...e) => el.prepend(...e.flat(Infinity)));
     const last = append = (el = document.body, ...elems) => elems.length ? el.append(...elems.flat(Infinity)) : (...e) => el.append(...e.flat(Infinity));
@@ -464,6 +462,7 @@ const dom = function() {
     };
 
     return {
+	isElement,
         get: {
             byId,
             byName,
