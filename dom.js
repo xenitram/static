@@ -3,12 +3,12 @@ const dom = function() {
 
 const isElement = (el) => el instanceof Element || el instanceof Document;
 
-const byId = (id) => {
-    if (typeof id !== 'string' || !id.trim()) {
-        throw new Error("Invalid id: must be a non-empty string");
-    }
-    return document.getElementById(id);
-};
+    const byId = (id) => {
+        if (typeof id !== 'string' || !id.trim()) {
+            throw new Error("Invalid id: must be a non-empty string");
+        }
+        return document.getElementById(id);
+    };
 
     const byName = (lbl) => {
         if (!lbl || typeof lbl !== 'string') {
