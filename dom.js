@@ -52,8 +52,10 @@ const dom = function() {
         (selector) => el.querySelectorAll(selector); // Called with just a context: $$(container)
 
     const first = prepend = (el = document.body, ...elems) => (elems.length ? el.prepend(...elems.flat(Infinity)) : (...e) => el.prepend(...e.flat(Infinity)));
-    const last = append = (el = document.body, ...elems) => elems.length ? el.append(...elems.flat(Infinity)) : (...e) => el.append(...e.flat(Infinity));
-
+    const last = append = (el = document.body, ...elems) => {
+        elems.length ? el.append(...elems.flat(Infinity)) : (...e) => el.append(...e.flat(Infinity));
+        return elems;
+    }
     const before = (el = document.body, ...elems) => elems.length ? el.before(...elems.flat(Infinity)) : (...e) => el.before(...e.flat(Infinity));
 
     const after = (el = document.body, ...elems) => elems.length ? el.after(...elems.flat(Infinity)) : (...e) => el.after(...e.flat(Infinity));
