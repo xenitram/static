@@ -51,20 +51,54 @@ const dom = function() {
         :
         (selector) => el.querySelectorAll(selector); // Called with just a context: $$(container)
 
-    const first = prepend = (el = document.body, ...elems) => (elems.length ? el.prepend(...elems.flat(Infinity)) : (...e) => el.prepend(...e.flat(Infinity)));
+    const first = prepend = (el = document.body, ...elems) =>{
+        elems.length ? el.prepend(...elems.flat(Infinity)) : (...e) => el.prepend(...e.flat(Infinity))
+        return elems;
+    };
+    
     const last = append = (el = document.body, ...elems) => {
         elems.length ? el.append(...elems.flat(Infinity)) : (...e) => el.append(...e.flat(Infinity));
         return elems;
     }
-    const before = (el = document.body, ...elems) => elems.length ? el.before(...elems.flat(Infinity)) : (...e) => el.before(...e.flat(Infinity));
+    const before = (el = document.body, ...elems) => {
+        elems.length ? el.before(...elems.flat(Infinity)) : (...e) => el.before(...e.flat(Infinity))
+        return elems;
+    };
 
-    const after = (el = document.body, ...elems) => elems.length ? el.after(...elems.flat(Infinity)) : (...e) => el.after(...e.flat(Infinity));
+    const after = (el = document.body, ...elems) => {
+        elems.length ? el.after(...elems.flat(Infinity)) : (...e) => el.after(...e.flat(Infinity));
+        return elems;
+    };
 
     const detach /*=remove*/ = (el = document.body) => el.remove();
 
     const replaceWith = (el = document.body, elem) => elem ? el.replaceWith(elem) : e => el.replaceWith(e);
 
-    const replaceChildren = (el = document.body, ...elems) => elems.length ? el.replaceChildren(...elems.flat(Infinity)) : (...e) => el.replaceChildren(...e.flat(Infinity));
+    /**
+ * Replaces a DOM element with another element(s) or HTML string(s).
+ * Supports currying when the replacement element is not provided initially.
+ *
+ * @param {HTMLElement} el - The element to be replaced.
+ * @param {HTMLElement|string|Array} [elem] - The replacement element(s) or HTML string(s).
+ * @returns {Function|undefined} - Returns a curried function if `elem` is not provided.
+ */
+/*
+const replaceWith = (el = document.body, elem) => {
+    const replace = (...elems) => {
+        const parsedElements = elems.flat(Infinity).map(e =>
+            typeof e === 'string' ? document.createRange().createContextualFragment(e) : e
+        );
+        el.replaceWith(...parsedElements);
+    };
+
+    return elem ? replace(elem) : replace;
+};
+*/
+
+    const replaceChildren = (el = document.body, ...elems) => {
+        elems.length ? el.replaceChildren(...elems.flat(Infinity)) : (...e) => el.replaceChildren(...e.flat(Infinity));
+        return elems;
+    };
 
     const attr = {
         set: (el, attrs, namespace = null) => {
