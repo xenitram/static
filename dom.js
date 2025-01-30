@@ -1,12 +1,11 @@
 const dom = function() {
 
-    const isElement = (el) => el instanceof Element || el instanceof Document;
 
-    const byId = (id) => {
-        if (typeof id !== 'string' || !id.trim()) {
-            throw new Error("Invalid id: must be a non-empty string");
+    const byId = (lbl) => {
+        if (!lbl || typeof lbl !== 'string') {
+            throw new Error("Invalid argument: `lbl` must be a non-empty string");
         }
-        return document.getElementById(id);
+        return document.getElementById(lbl);
     };
 
     const byName = (lbl) => {
@@ -32,6 +31,8 @@ const dom = function() {
         el.getElementsByTagNameNS(lbl) :
         (lbl) => el.getElementsByTagNameNS(lbl);
 
+
+
     const $ = (el = document, lbl) =>
         typeof el === 'string' ?
         document.querySelector(el) // Called with just a selector: $$('.class')
@@ -50,6 +51,8 @@ const dom = function() {
         el.querySelectorAll(lbl) // Called with a context and a selector: $$(container, '.class')
         :
         (selector) => el.querySelectorAll(selector); // Called with just a context: $$(container)
+
+
 
     const prepend = first = (target = document.body, ...elements) => {
         const prependTo = (el, els) => {
@@ -81,7 +84,7 @@ const dom = function() {
         }
     };
 
-    const before =precede = (target = document.body, ...elements) => {
+    const before = precede = (target = document.body, ...elements) => {
         const insertBefore = (el, els) => {
             el.before(...els.flat(Infinity));
             return el;
@@ -141,57 +144,6 @@ const dom = function() {
         }
     };
 
-    const attr = {
-        set: (el, attrs, namespace = null) => {
-            Object.entries(attrs).forEach(([key, value]) => {
-                if (el instanceof HTMLElement && key in el) {
-                    // If it's a known property, set it directly
-                    element[key] = value;
-                } else {
-                    if (namespace) {
-                        el.setAttributeNS(namespace, key, value);
-                    } else {
-                        el.setAttribute(key, value);
-                    }
-                }
-            });
-            return el;
-        },
-
-
-        get: (el, attrName, namespace = null) => {
-            return namespace ? el.getAttributeNS(namespace, attrName) : el.getAttribute(attrName);
-        },
-
-        remove: (el, attrNames, namespace = null) => {
-            attrNames.flat().forEach(attrName => {
-                if (namespace) {
-                    el.removeAttributeNS(namespace, attrName);
-                } else {
-                    el.removeAttribute(attrName);
-                }
-            });
-            return el;
-        },
-
-        has: (el, attrName, namespace = null) => {
-            return namespace ? el.hasAttributeNS(namespace, attrName) : el.hasAttribute(attrName);
-        },
-
-        toggle: (el, attrName, value = null, namespace = null) => {
-            if (namespace ? el.hasAttributeNS(namespace, attrName) : el.hasAttribute(attrName)) {
-                namespace ? el.removeAttributeNS(namespace, attrName) : el.removeAttribute(attrName);
-            } else {
-                namespace
-                    ?
-                    el.setAttributeNS(namespace, attrName, value !== null ? value : "") :
-                    el.setAttribute(attrName, value !== null ? value : "");
-            }
-            return el;
-        }
-    };
-
-
     function html(sel, ...args) {
         // Split the selector string by '.' or '#' into element, id, and classes
         const chunks = sel.split(/([.#@])/);
@@ -214,6 +166,19 @@ const dom = function() {
             }
         }
 
+        // Set other attributes from the attrs argument
+        function setAttribute(attrs) {
+            for (let val in attrs) {
+                if (val in element) {
+                    // If it's a known property, set it directly
+                    element[val] = attrs[val];
+                } else {
+                    // Otherwise, use setAttribute to set it as an attribute
+                    element.setAttribute(val, attrs[val]);
+                }
+            }
+        }
+
         args.forEach(arg => {
             // Append the content (arg) to the element
             if (arg instanceof Node) {
@@ -223,8 +188,7 @@ const dom = function() {
             } else if (typeof arg === "string" || typeof arg === "number") {
                 element.append(document.createTextNode(arg));
             } else if (typeof arg === "object") {
-                //setAttribute(element,arg);
-                attr.set(element, arg);
+                setAttribute(arg);
             }
         });
         // Return the element with the set attributes, ID, and classes
@@ -255,6 +219,21 @@ const dom = function() {
             }
         }
 
+        // Set other attributes from the args argument
+        function setAttribute(attrs) {
+            for (let key in attrs) {
+                if (attrs.hasOwnProperty(key)) {
+                    // Use `setAttributeNS` for SVG-specific attributes (like `xlink:href`)
+                    if (key === 'xlink:href') {
+                        element.setAttributeNS("http://www.w3.org/1999/xlink", key, attrs[key]);
+                    } else {
+                        element.setAttribute(key, attrs[key]);
+                    }
+                }
+            }
+        }
+
+
         // Iterate through args to append content or set attributes
         args.forEach(arg => {
             if (arg instanceof Node) {
@@ -268,8 +247,7 @@ const dom = function() {
                 element.append(document.createTextNode(arg));
             } else if (typeof arg === "object") {
                 // Handle object as attributes
-                //setAttribute(element,arg);
-                attr.set(element, arg, 'http://www.w3.org/1999/xlink');
+                setAttribute(arg);
             }
         });
 
@@ -289,19 +267,7 @@ const dom = function() {
             const fn = (...a) => typeof a[0] === 'string' ? el.removeEventListener(...a) : Object.entries(a[0]).forEach(([k, v]) => el.removeEventListener(k, v));
             return args.length ? fn(...args) : fn;
         },
-
-        fire: (el, name, detail = {}) => {
-            const fn = (name, detail) => {
-                if (!name || typeof name !== 'string') {
-                    throw new Error("Invalid event name: must be a non-empty string.");
-                }
-                el.dispatchEvent(new CustomEvent(name, {
-                    detail
-                }))
-            };
-            return (name) ? fn(name, detail) : fn;
-        },
-
+        fire: (el, arg) => el ? (el.dispatchEvent(new Event(arg)), el) : (e) => (e.dispatchEvent(new Event(arg)), e)
     };
 
     function animate(nodes, action, onEnd, o = {}) {
@@ -480,22 +446,22 @@ const dom = function() {
     }
 
     const css = {
-        add: (el, ...classes) => {
+        addClass: (el, ...classes) => {
             el.classList.add(...classes.flat());
             return el;
         },
 
-        remove: (el, ...classes) => {
+        removeClass: (el, ...classes) => {
             el.classList.remove(...classes.flat());
             return el;
         },
 
-        toggle: (el, className, force) => {
+        toggleClass: (el, className, force) => {
             el.classList.toggle(className, force);
             return el;
         },
 
-        has: (el, className) => {
+        hasClass: (el, className) => {
             return el.classList.contains(className);
         },
 
@@ -529,27 +495,52 @@ const dom = function() {
         }
     };
 
+    const attr = {
+        setAttr: (el, attrs) => {
+            Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+            return el;
+        },
 
+        getAttr: (el, attrName) => {
+            return el.getAttribute(attrName);
+        },
 
+        removeAttr: (el, ...attrNames) => {
+            attrNames.flat().forEach(attrName => el.removeAttribute(attrName));
+            return el;
+        },
+
+        hasAttr: (el, attrName) => {
+            return el.hasAttribute(attrName);
+        },
+
+        toggleAttr: (el, attrName, value = null) => {
+            if (el.hasAttribute(attrName)) {
+                el.removeAttribute(attrName);
+            } else {
+                el.setAttribute(attrName, value !== null ? value : "");
+            }
+            return el;
+        }
+    };
 
     const dataAttr = {
-        set: (el, key, value) => {
+        setData: (el, key, value) => {
             el.dataset[key] = value;
             return el;
         },
 
-        get: (el, key) => {
+        getData: (el, key) => {
             return el.dataset[key];
         },
 
-        remove: (el, key) => {
+        removeData: (el, key) => {
             delete el.dataset[key];
             return el;
         },
     };
 
     return {
-        isElement,
         get: {
             byId,
             byName,
@@ -578,9 +569,13 @@ const dom = function() {
             replaceChildren
         },
         first,
+        prepend,
         last,
+        append,
         before,
+        precede,
         after,
+        succede,
         detach,
         replaceWith,
         replaceChildren,
