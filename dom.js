@@ -51,53 +51,94 @@ const dom = function() {
         :
         (selector) => el.querySelectorAll(selector); // Called with just a context: $$(container)
 
-    const first = prepend = (el = document.body, ...elems) =>{
-        elems.length ? el.prepend(...elems.flat(Infinity)) : (...e) => el.prepend(...e.flat(Infinity))
-        return elems;
-    };
-    
-    const last = append = (el = document.body, ...elems) => {
-        elems.length ? el.append(...elems.flat(Infinity)) : (...e) => el.append(...e.flat(Infinity));
-        return elems;
-    }
-    const before = (el = document.body, ...elems) => {
-        elems.length ? el.before(...elems.flat(Infinity)) : (...e) => el.before(...e.flat(Infinity))
-        return elems;
-    };
+    const prepend = first = (target = document.body, ...elements) => {
+        const prependTo = (el, els) => {
+            el.prepend(...els.flat(Infinity));
+            return els;
+        };
 
-    const after = (el = document.body, ...elems) => {
-        elems.length ? el.after(...elems.flat(Infinity)) : (...e) => el.after(...e.flat(Infinity));
-        return elems;
+        if (elements.length) {
+            return prependTo(target, elements);
+        } else if (Array.isArray(target)) {
+            return prependTo(document.body, target);
+        } else {
+            return (...elems) => prependTo(target, elems);
+        }
     };
 
-    const detach /*=remove*/ = (el = document.body) => el.remove();
+    const append = last = (target = document.body, ...elements) => {
+        const appendTo = (el, els) => {
+            el.append(...els.flat(Infinity));
+            return els;
+        };
 
-    const replaceWith = (el = document.body, elem) => elem ? el.replaceWith(elem) : e => el.replaceWith(e);
-
-    /**
- * Replaces a DOM element with another element(s) or HTML string(s).
- * Supports currying when the replacement element is not provided initially.
- *
- * @param {HTMLElement} el - The element to be replaced.
- * @param {HTMLElement|string|Array} [elem] - The replacement element(s) or HTML string(s).
- * @returns {Function|undefined} - Returns a curried function if `elem` is not provided.
- */
-/*
-const replaceWith = (el = document.body, elem) => {
-    const replace = (...elems) => {
-        const parsedElements = elems.flat(Infinity).map(e =>
-            typeof e === 'string' ? document.createRange().createContextualFragment(e) : e
-        );
-        el.replaceWith(...parsedElements);
+        if (elements.length) {
+            return appendTo(target, elements);
+        } else if (Array.isArray(target)) {
+            return appendTo(document.body, target);
+        } else {
+            return (...elems) => appendTo(target, elems);
+        }
     };
 
-    return elem ? replace(elem) : replace;
-};
-*/
+    const before =precede = (target = document.body, ...elements) => {
+        const insertBefore = (el, els) => {
+            el.before(...els.flat(Infinity));
+            return el;
+        };
 
-    const replaceChildren = (el = document.body, ...elems) => {
-        elems.length ? el.replaceChildren(...elems.flat(Infinity)) : (...e) => el.replaceChildren(...e.flat(Infinity));
-        return elems;
+        if (elements.length) {
+            return insertBefore(target, elements);
+        } else if (Array.isArray(target)) {
+            return insertBefore(document.body, target);
+        } else {
+            return (...elems) => insertBefore(target, elems);
+        }
+    };
+
+    const after = succede = (target = document.body, ...elements) => {
+        const insertAfter = (el, els) => {
+            el.after(...els.flat(Infinity));
+            return el;
+        };
+
+        if (elements.length) {
+            return insertAfter(target, elements);
+        } else if (Array.isArray(target)) {
+            return insertAfter(document.body, target);
+        } else {
+            return (...elems) => insertAfter(target, elems);
+        }
+    };
+
+
+    const detach = (target = document.body) => target.remove();
+
+    const replaceWith = (el = document.body, elem) => {
+        const doReplace = (replacement) => {
+            const newElem = typeof replacement === 'string' ?
+                document.createRange().createContextualFragment(replacement) :
+                replacement;
+
+            el.replaceWith(newElem);
+            return el; // Return the replaced element for chaining
+        };
+
+        return elem ? doReplace(elem) : doReplace;
+    };
+
+
+    const replaceChildren = (target = document.body, ...elements) => {
+        const replace = (el, elems) => {
+            el.replaceChildren(...elems.flat(Infinity));
+            return elems;
+        };
+
+        if (elements.length) {
+            return replace(target, elements);
+        } else {
+            return (elems) => replace(target, elems);
+        }
     };
 
     const attr = {
