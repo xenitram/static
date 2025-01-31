@@ -58,11 +58,19 @@ function unflatten(arr,sizes) {
 }
 let flatten=(arr,level=Infinity)=>arr.flat(level);
 
+const range = function (start, end) {
+  const result = [];
+  for (let i = start; i < end; i++) {
+    result.push(i);
+  }
+  return result;
+}
 
-let range=function(length,start=0){
+const sequence = function (length,start=0){
 	return Array.from(Array(length), (d, i) => i+start)
 }
 
-return {flatSanitize,flatten,unflatten,range,unique}
+
+return {flatSanitize,flatten,unflatten,range,sequence,unique}
 
 }();
