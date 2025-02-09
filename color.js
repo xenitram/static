@@ -1,48 +1,21 @@
-/**
- * Color utility module.
- */
 const color = function() {
-    
-    const shift = [0.0, 2.0, 4.0];
 
-    /**
-     * Modulus function that handles negative values correctly.
-     * @param {number} a - The dividend.
-     * @param {number} n - The divisor.
-     * @returns {number} The result of the modulus operation.
-     */
+    const shift = [0.0, 2.0, 4.0];
     const mod = (a, n) => (((a % n) + n) % n);
 
-    /**
-     * Calculates the Euclidean distance between two RGB color arrays.
-     * @param {number[]} a - The first RGB color array.
-     * @param {number[]} b - The second RGB color array.
-     * @returns {number} The distance between the two colors.
-     */
     const distance = (a, b) => {
         return Math.sqrt(
             (b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2 + (b[2] - a[2]) ** 2
         );
     };
 
-    /**
-     * Finds the nearest color name to a given string using Levenshtein distance.
-     * @param {string} str - The input string.
-     * @returns {string} The nearest color name.
-     */
     const near = (str) => {
         return Object.entries(names).reduce((best, [key, val]) => {
             let d = levenshteinDistance(str, key);
             return d < best[1] ? [key, d] : best;
         }, ['', Infinity])[0];
-    }
 
-    /**
-     * Calculates the Levenshtein distance between two strings.
-     * @param {string} s - The first string.
-     * @param {string} t - The second string.
-     * @returns {number} The Levenshtein distance between the strings.
-     */
+    }
     const levenshteinDistance = (s, t) => {
         if (!s.length) return t.length;
         if (!t.length) return s.length;
@@ -214,36 +187,13 @@ const color = function() {
     };
 
     const hex = {
-        /**
-         * Converts a hex color string to an RGB array.
-         * @param {string} hx - The hex color string.
-         * @returns {number[]} The corresponding RGB array.
-         */
-        rgb_: hx => {
-            let h = hx.replace(/^#/, '');
-            if (h.length === 3) h = [...h].map(x => x + x).join('');
-            if (h.length === 6) h += 'ff'; // Default alpha to 255 if not provided
-            const intVal = parseInt(h, 16);
-            return [
-                (intVal >> 24) & 0xff,
-                (intVal >> 16) & 0xff,
-                (intVal >> 8) & 0xff,
-                ((intVal & 0xff) / 255) //.toFixed(2)
-            ];
-        },
 
-        /**
-         * Converts a hex color string to an RGB array.
-         * @param {string} hx - The hex color string.
-         * @returns {number[]} The corresponding RGB array.
-         */
         rgb: (hx) => {
             let h = hx.replace(/^#/, '');
             if (h.length === 3) h = [...h].map(x => x + x).join('');
             let r = parseInt(h.substring(0, 2), 16);
             let g = parseInt(h.substring(2, 4), 16);
             let b = parseInt(h.substring(4, 6), 16);
-            //return (h.length===8)?[r, g, b, parseInt(h.substring(6, 8), 16) / 255 ]:[r, g, b];
             return (h.length === 8) ? [r, g, b, parseInt(h.substring(6, 8), 16) / 256] : [r, g, b];
         },
 
@@ -262,21 +212,6 @@ const color = function() {
     };
 
     const rgb = {
-        /**
-         * Converts an RGB array to a hex color string.
-         * @param {...number} args - The RGB values.
-         * @returns {string} The hex color string.
-         */
-        hex_: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
-            return `#${_.map((x,i) => ((i!=3)?Math.round(x):Math.round(x*255)).toString(16).padStart(2, '0')).join('')}`
-        },
-
-        /**
-         * Converts an RGB array to a hex color string.
-         * @param {...number} args - The RGB values.
-         * @returns {string} The hex color string.
-         */
         hex: (...args) => {
             let _ = Array.isArray(args[0]) ? args[0] : args;
             return `#${_.slice(0, 4) // Ensure at most 4 values (RGBA)
@@ -287,12 +222,6 @@ const color = function() {
             })
             .join('')}`;
         },
-
-        /**
-         * Converts an RGB array to an HSL array.
-         * @param {...number} args - The RGB values.
-         * @returns {number[]} The HSL values.
-         */
         hsl: (...args) => {
             let _ = (Array.isArray(args[0])) ? args[0] : args;
             let [r, g, b, a] = _;
@@ -320,11 +249,6 @@ const color = function() {
             return (a) ? [h, s * 100, l * 100, a] : [h, s * 100, l * 100];
         },
 
-        /**
-         * Converts an RGB array to an HSB array.
-         * @param {...number} args - The RGB values.
-         * @returns {number[]} The HSB values.
-         */
         hsb: (...args) => {
             let _ = (Array.isArray(args[0])) ? args[0] : args;
             let [r, g, b, a] = _;
@@ -337,13 +261,685 @@ const color = function() {
                 n === 0 ? 0 : n && v === r ? (g - b) / n : v === g ? 2 + (b - r) / n : 4 + (r - g) / n;
             return (a) ? [60 * (h < 0 ? h + 6 : h), v && (n / v) * 100, v * 100, a] : [60 * (h < 0 ? h + 6 : h), v && (n / v) * 100, v * 100];
         },
-
-        /**
-         * Converts an RGB array to an HWB array.
-         * @param {...number} args - The RGB values.
-         * @returns {number[]} The HWB values.
-         */
         hwb: (...args) => {
             let _ = (Array.isArray(args[0])) ? args[0] : args;
             let [r, g, b, a] = _;
-            let w = Math.min(r, g
+            let w = Math.min(r, g, b) / 255 * 100;
+            let bVal = 100 - Math.max(r, g, b) / 255 * 100;
+            let [h] = rgb.hsl(r, g, b);
+            return (a) ? [h, w, bVal, a] : [h, w, bVal];
+        },
+
+        cmyk: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+            let c = 1 - r / 255,
+                m = 1 - g / 255,
+                y = 1 - b / 255;
+            let k = Math.min(c, m, y);
+            if (k === 1) return [0, 0, 0, 100, a];
+            return (a) ? [
+                ((c - k) / (1 - k) * 100),
+                ((m - k) / (1 - k) * 100),
+                ((y - k) / (1 - k) * 100),
+                (k * 100),
+                a
+            ] : [
+                ((c - k) / (1 - k) * 100),
+                ((m - k) / (1 - k) * 100),
+                ((y - k) / (1 - k) * 100),
+                (k * 100)
+            ];
+        },
+        hsv: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+            r /= 255, g /= 255, b /= 255;
+
+            var max = Math.max(r, g, b),
+                min = Math.min(r, g, b);
+            var h, s, v = max;
+
+            var d = max - min;
+            s = max == 0 ? 0 : d / max;
+
+            if (max == min) {
+                h = 0; // achromatic
+            } else {
+                switch (max) {
+                    case r:
+                        h = (g - b) / d + (g < b ? 6 : 0);
+                        break;
+                    case g:
+                        h = (b - r) / d + 2;
+                        break;
+                    case b:
+                        h = (r - g) / d + 4;
+                        break;
+                }
+
+                h /= 6;
+            }
+
+            return (a) ? [h, s, v, a] : [h, s, v];
+        },
+
+        xyz: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+            r /= 255
+            g /= 255
+            b /= 255
+
+            if (r > 0.04045) {
+                r = Math.pow(((r + 0.055) / 1.055), 2.4)
+            } else {
+                r = r / 12.92
+            }
+
+            if (g > 0.04045) {
+                g = Math.pow(((g + 0.055) / 1.055), 2.4)
+            } else {
+                g = g / 12.92
+            }
+
+            if (b > 0.04045) {
+                b = Math.pow(((b + 0.055) / 1.055), 2.4)
+            } else {
+                b = b / 12.92
+            }
+
+            r *= 100
+            g *= 100
+            b *= 100
+
+            // Observer = 2°, Illuminant = D65
+            const x = r * 0.4124 + g * 0.3576 + b * 0.1805
+            const y = r * 0.2126 + g * 0.7152 + b * 0.0722
+            const z = r * 0.0193 + g * 0.1192 + b * 0.9505
+
+            return (a) ? [x, y, z, a] : [x, y, z];
+        },
+
+        lab: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+
+            r = r / 255,
+                g = g / 255;
+            b = b / 255;
+            let x, y, z;
+
+            r = (r > 0.04045) ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+            g = (g > 0.04045) ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+            b = (b > 0.04045) ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+
+            x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
+            y = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 1.00000;
+            z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+
+            x = (x > 0.008856) ? Math.pow(x, 1 / 3) : (7.787 * x) + 16 / 116;
+            y = (y > 0.008856) ? Math.pow(y, 1 / 3) : (7.787 * y) + 16 / 116;
+            z = (z > 0.008856) ? Math.pow(z, 1 / 3) : (7.787 * z) + 16 / 116;
+
+            return (a) ? [(116 * y) - 16, 500 * (x - y), 200 * (y - z), a] : [(116 * y) - 16, 500 * (x - y), 200 * (y - z)]
+        },
+
+
+        lch: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+            let [l, a_, b_] = rgb.lab(r, g, b);
+            let c = Math.sqrt(a_ ** 2 + b_ ** 2);
+            let h = Math.atan2(b_, a_) * (180 / Math.PI);
+            if (h < 0) h += 360;
+            return (a) ? [l, c, h, a] : [l, c, h];
+        },
+
+        hcv: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let a = _[3];
+            // Normalize RGB values (0-255 -> 0-1)
+
+            let rgb = _.slice(0, 3).map(v => v / 255);
+
+            const m = Math.min(...rgb);
+            const M = Math.max(...rgb);
+            const C = M - m; // Chroma
+            const V = M; // Value
+
+            let H = 0;
+            if (C > 0) {
+                if (M === rgb[0]) {
+                    H = mod((rgb[1] - rgb[2]) / C, 6);
+                } else if (M === rgb[1]) {
+                    H = (rgb[2] - rgb[0]) / C + 2;
+                } else {
+                    H = (rgb[0] - rgb[1]) / C + 4;
+                }
+                H /= 6; // Normalize to [0,1]
+            }
+
+            return (a) ? [H, C, V, a] : [H, C, V];
+        },
+        yuv: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+            let y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            let u = -0.09991 * r - 0.33609 * g + 0.436 * b;
+            let v = 0.615 * r - 0.55861 * g - 0.05639 * b;
+            return (a) ? [y, u, v, a] : [y, u, v];
+        },
+        ycbcr: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+            let y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            let cb = -0.1146 * r - 0.3854 * g + 0.5 * b + 0.5;
+            let cr = 0.5 * r - 0.4542 * g - 0.0458 * b + 0.5;
+            return (a) ? [y, cb, cr, a] : [y, cb, cr];
+        },
+
+        name: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+            return Object.entries(names).reduce((best, [key, val]) => {
+                let d = distance([r, g, b], val);
+                return d < best[1] ? [key, d] : best;
+            }, ['', Infinity])[0];
+        },
+
+        toString: (args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [r, g, b, a] = _;
+            return a < 1 ? `rgba(${r},${g},${b},${a})` : `rgb(${r},${g},${b})`
+        },
+
+
+    };
+
+    const hsl = {
+        hex: (...args) => rgb.hex(hsl.rgb(...args)),
+
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [h, s, l, a] = _;
+            s /= 100, l /= 100;
+            let c = (1 - Math.abs(2 * l - 1)) * s;
+            let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            let m = l - c / 2;
+            let [r, g, b] = h < 60 ? [c, x, 0] :
+                h < 120 ? [x, c, 0] :
+                h < 180 ? [0, c, x] :
+                h < 240 ? [0, x, c] :
+                h < 300 ? [x, 0, c] : [c, 0, x];
+            return (a) ? [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255), a] : [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
+        },
+        hsb: (...args) => rgb.hsb(hsl.rgb(...args)),
+        hwb: (...args) => rgb.hwb(hsl.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(hsl.rgb(...args)),
+        hsv: (...args) => rgb.hsv(hsl.rgb(...args)),
+        xyz: (...args) => rgb.xyz(hsl.rgb(...args)),
+        lab: (...args) => rgb.lab(hsl.rgb(...args)),
+        lch: (...argsa) => rgb.lch(hsl.rgb(...args)),
+        hcv: (...args) => rgb.hcv(hsl.rgb(...args)),
+        yuv: (...args) => rgb.yuv(hsl.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(hsl.rgb(...args)),
+
+        name: (...args) => rgb.name(hsl.rgb(...args)),
+        toString: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [h, s, l, a] = _;
+            return a < 1 ? `hsla(${h}deg,${s}%,${l}%,${a})` : `hsl(${h}deg,${s}%,${l}%)`
+        }
+    };
+
+    const hsb = {
+        hex: (...args) => rgb.hex(hsb.rgb(...args)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [h, s, b, a] = _;
+            s /= 100;
+            b /= 100;
+            const k = (n) => (n + h / 60) % 6;
+            const f = (n) => b * (1 - s * Math.max(0, Math.min(k(n), 4 - k(n), 1)));
+            return (a) ? [255 * f(5), 255 * f(3), 255 * f(1), a] : [255 * f(5), 255 * f(3), 255 * f(1)];
+        },
+        hsl: (...args) => rgb.hsl(hsb.rgb(...args)),
+        hwb: (...args) => rgb.hwb(hsb.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(hsb.rgb(...args)),
+        hsv: (...args) => rgb.hsv(hsb.rgb(...args)),
+        xyz: (...args) => rgb.xyz(hsb.rgb(...args)),
+        lab: (...args) => rgb.lab(hsb.rgb(...args)),
+        lch: (...args) => rgb.lch(hsb.rgb(...args)),
+        hcv: (...args) => rgb.hcv(hsb.rgb(...args)),
+        yuv: (...args) => rgb.yuv(hsb.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(hsb.rgb(...args)),
+        name: (...args) => rgb.name(hsb.rgb(...args)),
+
+    };
+
+    const hwb = {
+        hex: (...args) => rgb.hex(hwb.rgb(...args)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [h, w, b, a] = _;
+            w /= 100;
+            b /= 100;
+            if (w + b >= 1) {
+                let gray = w / (w + b) * 255;
+                return [gray, gray, gray, a];
+            }
+            let rgb = hsl.rgb(h, 100, 50);
+            for (let i = 0; i < 3; i++) {
+                rgb[i] *= (1 - w - b);
+                rgb[i] += w * 255;
+            }
+            if (a) rgb[3] = a;
+            return rgb;
+        },
+
+
+
+
+        hsl: (...args) => rgb.hsl(hwb.rgb(...args)),
+        hsb: (...args) => rgb.hsb(hwb.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(hwb.rgb(...args)),
+
+        hsv: (...args) => rgb.hsv(hwb.rgb(...args)),
+        xyz: (...args) => rgb.xyz(hwb.rgb(...args)),
+        lab: (...args) => rgb.lab(hwb.rgb(...args)),
+        lch: (...args) => rgb.lch(hwb.rgb(...args)),
+        hcv: (...args) => rgb.hcv(hwb.rgb(...args)),
+        yuv: (...args) => rgb.yuv(hwb.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(hwb.rgb(...args)),
+        name: (...args) => rgb.name(hwb.rgb(...args)),
+
+    };
+
+    const cmyk = {
+        hex: (...args) => rgb.hex(cmyk.rgb(...args)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [c, m, y, k, a] = _;
+            let r = 255 * (1 - c / 100) * (1 - k / 100);
+            let g = 255 * (1 - m / 100) * (1 - k / 100);
+            let b = 255 * (1 - y / 100) * (1 - k / 100);
+            return (a) ? [r, g, b, a] : [r, g, b];
+        },
+        hsl: (...args) => rgb.hsl(cmyk.rgb(...args)),
+        hsb: (...args) => rgb.hsb(cmyk.rgb(...args)),
+        hwb: (...args) => rgb.hwb(cmyk.rgb(...args)),
+
+        hsv: (...args) => rgb.hsv(cmyk.rgb(...args)),
+        xyz: (...args) => rgb.xyz(cmyk.rgb(...args)),
+        lab: (...args) => rgb.lab(cmyk.rgb(...args)),
+        lch: (...args) => rgb.lch(cmyk.rgb(...args)),
+        hcv: (...args) => rgb.hcv(cmyk.rgb(...args)),
+        yuv: (...args) => rgb.yuv(cmyk.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(cmyk.rgb(...args)),
+        name: (...args) => rgb.name(cmyk.rgb(...args)),
+
+    };
+
+    const hsv = {
+        hex: (...args) => rgb.hex(hsv.rgb(...args)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [h, s, v, a] = _;
+
+            var r, g, b;
+
+            var i = Math.floor(h * 6);
+            var f = h * 6 - i;
+            var p = v * (1 - s);
+            var q = v * (1 - f * s);
+            var t = v * (1 - (1 - f) * s);
+
+            switch (i % 6) {
+                case 0:
+                    r = v, g = t, b = p;
+                    break;
+                case 1:
+                    r = q, g = v, b = p;
+                    break;
+                case 2:
+                    r = p, g = v, b = t;
+                    break;
+                case 3:
+                    r = p, g = q, b = v;
+                    break;
+                case 4:
+                    r = t, g = p, b = v;
+                    break;
+                case 5:
+                    r = v, g = p, b = q;
+                    break;
+            }
+
+            return (a) ? [r * 255, g * 255, b * 255, a] : [r * 255, g * 255, b * 255];
+        },
+        hsl: (...args) => rgb.hsl(hsv.rgb(...args)),
+        hsb: (...args) => rgb.hsb(hsv.rgb(...args)),
+        hwb: (...args) => rgb.hwb(hsv.rgb(...args)),
+        hsv: (...args) => rgb.hsv(hsv.rgb(...args)),
+        xyz: (...args) => rgb.xyz(hsv.rgb(...args)),
+        lab: (...args) => rgb.lab(hsv.rgb(...args)),
+        lch: (...args) => rgb.lch(hsv.rgb(...args)),
+        hcv: (...args) => rgb.hcv(hsv.rgb(...args)),
+        yuv: (...args) => rgb.yuv(hsv.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(hsv.rgb(...args)),
+
+        name: (...args) => rgb.name(hsv.rgb(...args)),
+    }
+
+
+    const xyz = {
+        hex: (...args) => rgb.hex(xyz.rgb(...args)),
+
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [x, y, z, a] = _;
+            // Observer = 2°, Illuminant = D65
+            x = x / 100 // X from 0 to 95.047
+            y = y / 100 // Y from 0 to 100.000
+            z = z / 100 // Z from 0 to 108.883
+
+            let r = x * 3.2406 + y * -1.5372 + z * -0.4986
+            let g = x * -0.9689 + y * 1.8758 + z * 0.0415
+            let b = x * 0.0557 + y * -0.2040 + z * 1.0570
+
+            if (r > 0.0031308) {
+                r = 1.055 * (Math.pow(r, 0.41666667)) - 0.055
+            } else {
+                r = 12.92 * r
+            }
+
+            if (g > 0.0031308) {
+                g = 1.055 * (Math.pow(g, 0.41666667)) - 0.055
+            } else {
+                g = 12.92 * g
+            }
+
+            if (b > 0.0031308) {
+                b = 1.055 * (Math.pow(b, 0.41666667)) - 0.055
+            } else {
+                b = 12.92 * b
+            }
+
+            r *= 255
+            g *= 255
+            b *= 255
+
+            return (a) ? [r, g, b, a] : [r, g, b];
+        },
+        hsl: (...args) => rgb.hsl(xyz.rgb(...args)),
+        hsb: (...args) => rgb.hsb(xyz.rgb(...args)),
+        hwb: (...args) => rgb.hwb(xyz.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(xyz.rgb(...args)),
+        hsv: (...args) => rgb.hsv(xyz.rgb(...args)),
+        xyz: (...args) => rgb.xyz(xyz.rgb(...args)),
+        lab: (...args) => rgb.lab(xyz.rgb(...args)),
+        lch: (...args) => rgb.lch(xyz.rgb(...args)),
+        hcv: (...args) => rgb.hcv(xyz.rgb(...args)),
+        yuv: (...args) => rgb.yuv(xyz.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(xyz.rgb(...args)),
+        name: (...args) => rgb.name(xyz.rgb(...args)),
+    }
+
+    const lab = {
+        hex: (l, a, b) => rgb.hex(lab.rgb(l, a, b)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [l_, a_, b_, _a] = _;
+            let y = (l_ + 16) / 116,
+                x = a_ / 500 + y,
+                z = y - b_ / 200,
+                r, g, b;
+
+            x = 0.95047 * ((x * x * x > 0.008856) ? x * x * x : (x - 16 / 116) / 7.787);
+            y = 1.00000 * ((y * y * y > 0.008856) ? y * y * y : (y - 16 / 116) / 7.787);
+            z = 1.08883 * ((z * z * z > 0.008856) ? z * z * z : (z - 16 / 116) / 7.787);
+
+            r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+            g = x * -0.9689 + y * 1.8758 + z * 0.0415;
+            b = x * 0.0557 + y * -0.2040 + z * 1.0570;
+
+            r = (r > 0.0031308) ? (1.055 * Math.pow(r, 1 / 2.4) - 0.055) : 12.92 * r;
+            g = (g > 0.0031308) ? (1.055 * Math.pow(g, 1 / 2.4) - 0.055) : 12.92 * g;
+            b = (b > 0.0031308) ? (1.055 * Math.pow(b, 1 / 2.4) - 0.055) : 12.92 * b;
+
+            return (_a) ? [Math.max(0, Math.min(1, r)) * 255,
+                Math.max(0, Math.min(1, g)) * 255,
+                Math.max(0, Math.min(1, b)) * 255,
+                _a
+            ] : [Math.max(0, Math.min(1, r)) * 255,
+                Math.max(0, Math.min(1, g)) * 255,
+                Math.max(0, Math.min(1, b)) * 255
+            ]
+        },
+        hsl: (...args) => rgb.hsl(lab.rgb(...args)),
+        hsb: (...args) => rgb.hsb(lab.rgb(...args)),
+        hwb: (...args) => rgb.hwb(lab.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(lab.rgb(...args)),
+        hsv: (...args) => rgb.hsv(lab.rgb(...args)),
+        xyz: (...args) => rgb.xyz(lab.rgb(...args)),
+        lab: (...args) => rgb.lab(lab.rgb(...args)),
+        lch: (...args) => rgb.lch(lab.rgb(...args)),
+        hcv: (...args) => rgb.hcv(lab.rgb(...args)),
+        yuv: (...args) => rgb.yuv(lab.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(lab.rgb(...args)),
+
+        name: (...args) => rgb.name(lab.rgb(...args)),
+    }
+
+    const lch = {
+        hex: (...args) => rgb.hex(lch.rgb(...args)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [l, c, h, a] = _;
+            let hr = (h * Math.PI) / 180;
+            let a_ = c * Math.cos(hr);
+            let b_ = c * Math.sin(hr);
+            let rgbColor = lab.rgb(l, a_, b_);
+            return (a) ? [...rgbColor, a] : rgbColor;
+        },
+        hsl: (...args) => rgb.hsl(lch.rgb(...args)),
+        hsb: (...args) => rgb.hsb(lch.rgb(...args)),
+        hwb: (...args) => rgb.hwb(lch.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(lch.rgb(...args)),
+        hsv: (...args) => rgb.hsv(lch.rgb(...args)),
+        xyz: (...args) => rgb.xyz(lch.rgb(...args)),
+        lab: (...args) => rgb.lab(lch.rgb(...args)),
+        lch: (...args) => rgb.lch(lch.rgb(...args)),
+        hcv: (...args) => rgb.hcv(lch.rgb(...args)),
+        yuv: (...args) => rgb.yuv(lch.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(lch.rgb(...args)),
+
+        name: (...args) => rgb.name(lch.rgb(...args)),
+    };
+
+    const hcv = { //former hcg
+        hex: (...args) => rgb.hex(hcv.rgb(...args)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [H, C, V, a] = _;
+            const h = H * 6.0; // Scale back to [0,6] range
+            const rgb = [h, h, h].map((v, i) =>
+                Math.min(Math.max(Math.abs(mod(v - shift[i], 6.0) - 3.0) - 1.0, 0.0), 1.0)
+            );
+            const m = V - C; // Corrected adjustment value
+            let [r, g, b] = rgb.map((ch) => (ch * C + m) * 255).map(Math.round); // Scale back to 0-255
+            return (a) ? [r, g, b, a] : [r, g, b];
+        },
+
+        hsl: (...args) => rgb.hsl(hcv.rgb(...args)),
+        hsb: (...args) => rgb.hsb(hcv.rgb(...args)),
+        hwb: (...args) => rgb.hwb(hcv.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(hcv.rgb(...args)),
+        hsv: (...args) => rgb.hsv(hcv.rgb(...args)),
+        xyz: (...args) => rgb.xyz(hcv.rgb(...args)),
+        lab: (...args) => rgb.lab(hcv.rgb(...args)),
+        lch: (...args) => rgb.lch(hcv.rgb(...args)),
+        hcv: (...args) => rgb.hcv(hcv.rgb(...args)),
+        yuv: (...args) => rgb.yuv(hcv.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(hcv.rgb(...args)),
+
+        name: (...args) => rgb.name(hcv.rgb(...args)),
+    };
+
+
+    const yuv = {
+        hex: (...args) => rgb.hex(hcv.rgb(...args)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [y, u, v, a] = _;
+            let r = y + 1.28033 * v;
+            let g = y - 0.21482 * u - 0.38059 * v;
+            let b = y + 2.12798 * u;
+            return (a) ? [r, g, b, a] : [r, g, b];
+        },
+        hsl: (...args) => rgb.hsl(yuv.rgb(...args)),
+        hsb: (...args) => rgb.hsb(yuv.rgb(...args)),
+        hwb: (...args) => rgb.hwb(yuv.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(yuv.rgb(...args)),
+        hsv: (...args) => rgb.hsv(yuv.rgb(...args)),
+        xyz: (...args) => rgb.xyz(yuv.rgb(...args)),
+        lab: (...args) => rgb.lab(yuv.rgb(...args)),
+        lch: (...args) => rgb.lch(yuv.rgb(...args)),
+        hcv: (...args) => rgb.hcv(yuv.rgb(...args)),
+        hcg: (...args) => rgb.hcg(yuv.rgb(...args)),
+        ycbcr: (...args) => rgb.ycbcr(yuv.rgb(...args)),
+
+        name: (...args) => rgb.name(yuv.rgb(...args)),
+    }
+
+    const ycbcr = {
+        hex: (...args) => rgb.hex(hcv.rgb(...args)),
+        rgb: (...args) => {
+            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            let [y, cb, cr, a] = _;
+            let r = y + 1.5748 * (cr - 0.5);
+            let g = y - 0.1873 * (cb - 0.5) - 0.4681 * (cr - 0.5);
+            let b = y + 1.8556 * (cb - 0.5);
+            return (a) ? [r, g, b, a] : [r, g, b];
+        },
+        hsl: (...args) => rgb.hsl(ycbcr.rgb(...args)),
+        hsb: (...args) => rgb.hsb(ycbcr.rgb(...args)),
+        hwb: (...args) => rgb.hwb(ycbcr.rgb(...args)),
+        cmyk: (...args) => rgb.cmyk(ycbcr.rgb(...args)),
+        hsv: (...args) => rgb.hsv(ycbcr.rgb(...args)),
+        xyz: (...args) => rgb.xyz(ycbcr.rgb(...args)),
+        lab: (...args) => rgb.lab(ycbcr.rgb(...args)),
+        lch: (...args) => rgb.lch(ycbcr.rgb(...args)),
+        hcv: (...args) => rgb.hcv(ycbcr.rgb(...args)),
+        hcg: (...args) => rgb.hcg(ycbcr.rgb(...args)),
+        yuv: (...args) => rgb.hcg(ycbcr.rgb(...args)),
+
+        name: (...args) => rgb.name(ycbcr.rgb(...args)),
+
+    }
+
+    const name = {
+        hex: (n) => rgb.hex(names[near(n)]),
+        rgb: (n) => names[near(n)],
+        hsl: (n) => rgb.hsl(names[near(n)]),
+        hsb: (n) => rgb.hsb(names[near(n)]),
+        hwb: (n) => rgb.hwb(names[near(n)]),
+        cmyk: (n) => rgb.cmyk(names[near(n)]),
+        hsv: (n) => rgb.hsv(names[near(n)]),
+        xyz: (n) => rgb.xyz(names[near(n)]),
+        lab: (n) => rgb.lab(names[near(n)]),
+        lch: (n) => rgb.lch(names[near(n)]),
+        hcv: (n) => rgb.hcv(names[near(n)]),
+        yuv: (n) => rgb.yuv(names[near(n)]),
+        ycbcr: (n) => rgb.ycbcr(names[near(n)]),
+    };
+
+
+    function heatMap(value) {
+        var h = (1.0 - value) * 240
+        return [h, 100, 50];
+    }
+
+    function coolColor() {
+        // Get a cool colour
+        var hue = Math.random() * 260;
+        return [hue.toFixed(15), 50, 50];
+    };
+
+    function grayscale(value) {
+        let l = value * 100;
+        return [0, 0, l]; // HSL (0, 0%, L%)
+    }
+
+    function pastelColor(h, s, l) {
+        h = h || Math.random() * 360;
+        s = s || 60 + Math.random() * 20
+        l = 70 + Math.random() * 20
+        return [h, s, l];
+    }
+
+    function complementaryColor(h, s, l) {
+        return [(h + 180) % 360, s, l];
+    }
+
+
+    function triadicColors(h, s, l) {
+        return [
+            [h, s, l],
+            [(h + 120) % 360, s, l],
+            [(h + 240) % 360, s, l]
+        ];
+    }
+
+
+    function analogousColors(h, s, l, angle = 30) {
+        return [
+            [(h - angle + 360) % 360, s, l],
+            [h, s, l],
+            [(h + angle) % 360, s, l]
+        ];
+    }
+
+
+    function warmColor(h, s, l) {
+        h = h || Math.random() * 60;
+        s = s || 80 + Math.random() * 20
+        l = 50 + Math.random() * 10
+        return [h, s, l];
+    }
+
+    return {
+        hex,
+        rgb,
+        hsl,
+        hsb,
+        hwb,
+        cmyk,
+        hsv,
+        xyz,
+        lab,
+        lch,
+        hcv,
+        yuv,
+        ycbcr,
+        names,
+        name,
+        distance,
+        near,
+        heatMap,
+        coolColor,
+        grayscale,
+        pastelColor,
+        complementaryColor,
+        triadicColors,
+        analogousColors,
+        warmColor,
+        r: 0,
+        y: 60,
+        g: 120,
+        c: 180,
+        b: 240,
+        m: 300
+    };
+}();
