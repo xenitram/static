@@ -856,35 +856,154 @@ const color = function() {
     };
 
 
-    function heatMap(value) {
+    const heatMap = (value) => {
         var h = (1.0 - value) * 240
         return [h, 100, 50];
     }
 
-    function coolColor() {
-        // Get a cool colour
-        var hue = Math.random() * 260;
-        return [hue.toFixed(15), 50, 50];
-    };
 
-    function grayscale(value) {
+    const grayscale = (value) => {
         let l = value * 100;
         return [0, 0, l]; // HSL (0, 0%, L%)
     }
 
-    function pastelColor(h, s, l) {
-        h = h || Math.random() * 360;
-        s = s || 60 + Math.random() * 20
-        l = 70 + Math.random() * 20
-        return [h, s, l];
+    const pastelColor = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, l, a] = _;
+        h = h * 360;
+        s = 60 + s * 20
+        l = 70 + l * 20
+        return Array.isArray(_) ? [h, s, l, a] : {
+            h,
+            s,
+            l,
+            a
+        };
     }
 
-    function complementaryColor(h, s, l) {
+    const jewel = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, b, a] = _;
+        h = h * 360;
+        s = 83 + (s * (73 - 83));
+        b = 76 + (b * (56 - 76));
+
+        return Array.isArray(_) ? [h, s, b, a] : {
+            h,
+            s,
+            b,
+            a
+        };
+    };
+
+    const pastel = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, b, a] = _;
+        h = h * 360
+        s = 21 + (s * (21 - 14))
+        b = 96 + (b * (96 - 89))
+        return Array.isArray(_) ? [h, s, b, a] : {
+            h,
+            s,
+            b,
+            a
+        };
+    }
+
+    const earth = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, b, a] = _;
+        h = h * 360
+        s = 41 + (s * (41 - 36))
+        b = 77 + (b * (77 - 36))
+        return Array.isArray(_) ? [h, s, b, a] : {
+            h,
+            s,
+            b,
+            a
+        };
+    }
+
+    const neutral = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, b, a] = _;
+        h = h * 360
+        s = 10 + (s * (10 - 14))
+        b = 99 + (b * (99 - 70))
+        return Array.isArray(_) ? [h, s, b, a] : {
+            h,
+            s,
+            b,
+            a
+        };
+    }
+
+    const neon = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, b, a] = _;
+        h = h * 360
+        s = 100 + (s * (100 - 63))
+        b = 100 + (b * (100 - 82))
+        return Array.isArray(_) ? [h, s, b, a] : {
+            h,
+            s,
+            b,
+            a
+        };
+    }
+
+    const shade = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, b, a] = _;
+        h = h * 360
+        s = 0 + (s * (0 - 0))
+        b = 100 + (b * (100 - 0))
+        return Array.isArray(_) ? [h, s, b, a] : {
+            h,
+            s,
+            b,
+            a
+        };
+    }
+
+    const warm = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, l, a] = _;
+
+        h = 270 + h * 180;
+        s = 80 + s * 20;
+        l = 50 + l * 10;
+
+        return Array.isArray(_) ? [h, s, l, a] : {
+            h,
+            s,
+            l,
+            a
+        };
+    }
+
+    const cold = (...args) => {
+        let _ = typeof args[0] === 'object' ? args[0] : args;
+        let [h, s, l, a] = _;
+
+        h = h * 180;
+        s = 80 + s * 20;
+        l = 50 + l * 10;
+
+        return Array.isArray(_) ? [h, s, l, a] : {
+            h,
+            s,
+            l,
+            a
+        };
+    }
+
+    const complementary = (h, s, l) => {
         return [(h + 180) % 360, s, l];
     }
 
 
-    function triadicColors(h, s, l) {
+    const triadic = (h, s, l) => {
         return [
             [h, s, l],
             [(h + 120) % 360, s, l],
@@ -893,20 +1012,12 @@ const color = function() {
     }
 
 
-    function analogousColors(h, s, l, angle = 30) {
+    const analogous = (h, s, l, angle = 30) => {
         return [
             [(h - angle + 360) % 360, s, l],
             [h, s, l],
             [(h + angle) % 360, s, l]
         ];
-    }
-
-
-    function warmColor(h, s, l) {
-        h = h || Math.random() * 60;
-        s = s || 80 + Math.random() * 20
-        l = 50 + Math.random() * 10
-        return [h, s, l];
     }
 
     return {
@@ -928,13 +1039,19 @@ const color = function() {
         distance,
         near,
         heatMap,
-        coolColor,
         grayscale,
         pastelColor,
-        complementaryColor,
-        triadicColors,
-        analogousColors,
-        warmColor,
+        jewel,
+        pastel,
+        earth,
+        neutral,
+        neon,
+        shade,
+        warm,
+        cold,
+        complementary,
+        triadic,
+        analogous,
         r: 0,
         y: 60,
         g: 120,
