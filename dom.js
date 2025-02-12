@@ -1,6 +1,5 @@
 const dom = function() {
 
-
     const byId = (lbl) => {
         if (!lbl || typeof lbl !== 'string') {
             throw new Error("Invalid argument: `lbl` must be a non-empty string");
@@ -14,7 +13,6 @@ const dom = function() {
         }
         return document.getElementsByName(lbl);
     };
-
 
     const byClass = (el = document, lbl) =>
         lbl !== undefined ?
@@ -255,20 +253,46 @@ const dom = function() {
         return element;
     }
 
-    // class Event{} to be implemented;
-
-
     const event = {
         on: (el, ...args) => {
-            const fn = (...a) => typeof a[0] === 'string' ? el.addEventListener(...a) : Object.entries(a[0]).forEach(([k, v]) => el.addEventListener(k, v));
+            if (!(el instanceof EventTarget)) throw new TypeError("Provided element is not an EventTarget");
+
+            const fn = (...a) => {
+                if (typeof a[0] === 'string') {
+                    el.addEventListener(...a);
+                } else if (a[0] && typeof a[0] === 'object') {
+                    Object.entries(a[0]).forEach(([k, v]) => el.addEventListener(k, v));
+                }
+                return el;
+            };
             return args.length ? fn(...args) : fn;
         },
         off: (el, ...args) => {
-            const fn = (...a) => typeof a[0] === 'string' ? el.removeEventListener(...a) : Object.entries(a[0]).forEach(([k, v]) => el.removeEventListener(k, v));
+            if (!(el instanceof EventTarget)) throw new TypeError("Provided element is not an EventTarget");
+
+            const fn = (...a) => {
+                if (typeof a[0] === 'string') {
+                    el.removeEventListener(...a);
+                } else if (a[0] && typeof a[0] === 'object') {
+                    Object.entries(a[0]).forEach(([k, v]) => el.removeEventListener(k, v));
+                }
+                return el;
+            };
             return args.length ? fn(...args) : fn;
         },
-        fire: (el, arg) => el ? (el.dispatchEvent(new Event(arg)), el) : (e) => (e.dispatchEvent(new Event(arg)), e)
+        fire: (el, arg) => {
+            if (el instanceof EventTarget) {
+                el.dispatchEvent(new Event(arg));
+                return el;
+            }
+            return (e) => {
+                if (!(e instanceof EventTarget)) throw new TypeError("Provided element is not an EventTarget");
+                e.dispatchEvent(new Event(arg));
+                return e;
+            };
+        }
     };
+
 
     function animate(nodes, action, onEnd, o = {}) {
 
