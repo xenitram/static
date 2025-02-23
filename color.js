@@ -16,23 +16,25 @@ const color = function() {
         }, ['', Infinity])[0];
 
     }
-
-  const levenshteinDistance = (s, t) => {
-    if (!s.length) return t.length;
-    if (!t.length) return s.length;
-    const arr = Array.from({ length: t.length + 1 }, (_, i) => [i]);
-    for (let i = 1; i <= s.length; i++) arr[0][i] = i;
-    for (let i = 1; i <= t.length; i++) {
-      for (let j = 1; j <= s.length; j++) {
-        arr[i][j] = Math.min(
-          arr[i - 1][j] + 1,
-          arr[i][j - 1] + 1,
-          arr[i - 1][j - 1] + (s[j - 1] === t[i - 1] ? 0 : 1)
-        );
-      }
-    }
-    return arr[t.length][s.length];
-  };
+    const levenshteinDistance = (s, t) => {
+        if (!s.length) return t.length;
+        if (!t.length) return s.length;
+        const arr = [];
+        for (let i = 0; i <= t.length; i++) {
+            arr[i] = [i];
+            for (let j = 1; j <= s.length; j++) {
+                arr[i][j] =
+                    i === 0 ?
+                    j :
+                    Math.min(
+                        arr[i - 1][j] + 1,
+                        arr[i][j - 1] + 1,
+                        arr[i - 1][j - 1] + (s[j - 1] === t[i - 1] ? 0 : 1)
+                    );
+            }
+        }
+        return arr[t.length][s.length];
+    };
 
     const names = {
         aliceblue: [240, 248, 255],
@@ -1156,42 +1158,41 @@ const color = function() {
     }
 
     return {
-		hex,
-		rgb,//R (Red),  G (Green), B (Blue): 0 - 255 (integer)
-        hsl,//H (Hue): 0 - 360°, S (Saturation): 0 - 100%, L (Lightness): 0 - 100%
-        hsb,//=hsv H (Hue): 0 - 360°, S (Saturation): 0 - 100%, B (V) (Brightness/Value): 0 - 100%
-        hwb,//H (Hue): 0 - 360°, W (Whiteness): 0 - 100%, B (Blackness): 0 - 100%
-        cmyk,//C (Cyan), M (Magenta), Y (Yellow), K (Black): 0 - 100%
-        //hsv =hsb,
-        xyz,//X: 0 - ~95.047, Y: 0 - ~100.000 (Y is perceptual luminance), Z: 0 - ~108.883
-        lab,//L (Lightness): 0 - 100, a (Green to Red): ~ -128 to +127,b (Blue to Yellow): ~ -128 to +127
-        lch,//L (Lightness): 0 - 100, C (Chroma): 0 - ~150 (No fixed max, depends on color gamut), H (Hue): 0 - 360°
-        hcv,//=former hcg, H (Hue): 0 - 360°, C (Chroma): 0 - 100, V (Value): 0 - 100
-        yuv,
-        ycbcr, 
-        names,
-        name,
-        distance,
-        near,
-        heatMap,
-        grayscale,
-        pastelColor,
-        jewel,
-        pastel,
-        earth,
-        neutral,
-        neon,
-        shade,
-        warm,
-        cold,
-        complementary,
-        triadic,
-        analogous,
-        r: 0,
-        y: 60,
-        g: 120,
-        c: 180,
-        b: 240,
-        m: 300
+         hex, // Converts color values to hex format
+         rgb, // R (Red), G (Green), B (Blue): 0 - 255 (integer)
+         hsl, // H (Hue): 0 - 360°, S (Saturation): 0 - 100%, L (Lightness): 0 - 100%
+         hsb, // =hsv H (Hue): 0 - 360°, S (Saturation): 0 - 100%, B (V) (Brightness/Value): 0 - 100%
+         hwb, // H (Hue): 0 - 360°, W (Whiteness): 0 - 100%, B (Blackness): 0 - 100%
+         cmyk, // C (Cyan), M (Magenta), Y (Yellow), K (Black): 0 - 100%
+         xyz, // X: 0 - ~95.047, Y: 0 - ~100.000 (Y is perceptual luminance), Z: 0 - ~108.883
+         lab, // L (Lightness): 0 - 100, a (Green to Red): ~ -128 to +127, b (Blue to Yellow): ~ -128 to +127
+         lch, // L (Lightness): 0 - 100, C (Chroma): 0 - ~150 (No fixed max, depends on color gamut), H (Hue): 0 - 360°
+         hcv, // =former hcg, H (Hue): 0 - 360°, C (Chroma): 0 - 100, V (Value): 0 - 100
+         yuv, // Y (Luma): 0 - 1, U (Chroma Blue): -0.436 to 0.436, V (Chroma Red): -0.615 to 0.615
+         ycbcr, // Y (Luma): 16 - 235, Cb (Chroma Blue): 16 - 240, Cr (Chroma Red): 16 - 240
+         names, // Named colors and their RGB values
+         name, // Get the name of the nearest color
+         distance, // Calculate distance between two colors
+         near, // Find the nearest named color
+         heatMap, // Generate a heat map color based on value
+         grayscale, // Generate a grayscale color based on value
+         pastelColor, // Generate a pastel color
+         jewel, // Generate a jewel-tone color
+         pastel, // Generate a pastel color
+         earth, // Generate an earth-tone color
+         neutral, // Generate a neutral color
+         neon, // Generate a neon color
+         shade, // Generate a shaded color
+         warm, // Generate a warm color
+         cold, // Generate a cold color
+         complementary, // Generate a complementary color
+         triadic, // Generate a triadic color scheme
+         analogous, // Generate an analogous color scheme
+         r, // Red hue angle
+         y, // Yellow hue angle
+         g, // Green hue angle
+         c, // Cyan hue angle
+         b, // Blue hue angle
+         m // Magenta hue angle
     };
 }();
