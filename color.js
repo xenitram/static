@@ -1188,11 +1188,11 @@ const color = function() {
          complementary, // Generate a complementary color
          triadic, // Generate a triadic color scheme
          analogous, // Generate an analogous color scheme
-         r, // Red hue angle
-         y, // Yellow hue angle
-         g, // Green hue angle
-         c, // Cyan hue angle
-         b, // Blue hue angle
-         m // Magenta hue angle
+         r:0, // Red hue angle
+         y:60, // Yellow hue angle
+         g:120, // Green hue angle
+         c:180, // Cyan hue angle
+         b:240, // Blue hue angle
+         m:300 // Magenta hue angle
     };
 }();
