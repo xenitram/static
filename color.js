@@ -1,5 +1,5 @@
-const color = function() {
 
+const color = function() {
     const shift = [0.0, 2.0, 4.0];
     const mod = (a, n) => (((a % n) + n) % n);
 
@@ -201,7 +201,7 @@ const color = function() {
         hsb: hx => rgb.hsb(hex.rgb(hx)),
         hwb: hx => rgb.hwb(hex.rgb(hx)),
         cmyk: hx => rgb.cmyk(hex.rgb(hx)),
-        hsv: hx => rgb.hsv(hex.rgb(hx)),
+        //hsv: hx => rgb.hsv(hex.rgb(hx)),
         xyz: hx => rgb.xyz(hex.rgb(hx)),
         lab: hx => rgb.lab(hex.rgb(hx)),
         lch: hx => rgb.lch(hex.rgb(hx)),
@@ -223,7 +223,9 @@ const color = function() {
             .join('')}`;
         },
         hsl: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             r /= 255, g /= 255, b /= 255;
             const max = Math.max(r, g, b),
@@ -246,53 +248,83 @@ const color = function() {
                 }
                 h *= 60;
             }
-            return (a) ? [h, s * 100, l * 100, a] : [h, s * 100, l * 100];
+			s*=100
+			l*=100
+
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [h,s,l,a] : [h,s,l])		
+				: (a !== undefined ? { h,s,l,a } : { h,s,l })
+
         },
 
         hsb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             r /= 255;
             g /= 255;
             b /= 255;
-            const v = Math.max(r, g, b),
+            let v = Math.max(r, g, b),
                 n = v - Math.min(r, g, b);
-            const h =
-                n === 0 ? 0 : n && v === r ? (g - b) / n : v === g ? 2 + (b - r) / n : 4 + (r - g) / n;
-            return (a) ? [60 * (h < 0 ? h + 6 : h), v && (n / v) * 100, v * 100, a] : [60 * (h < 0 ? h + 6 : h), v && (n / v) * 100, v * 100];
-        },
+            let h =
+                n === 0 
+				? 0 
+				: n && v === r 
+				? (g - b) / n 
+				: v === g 
+				? 2 + (b - r) / n 
+				: 4 + (r - g) / n;
+
+			h=60 * (h < 0 ? h + 6 : h)
+			s=v && (n / v) * 100
+			b=v * 100
+	
+			return Array.isArray(args[0])
+				? (a !== undefined ? [h,s,b,a] : [h,s,b])			
+				: (a !== undefined ? { h,s,b,a } : { h,s,b })
+
+			},
         hwb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             let w = Math.min(r, g, b) / 255 * 100;
-            let bVal = 100 - Math.max(r, g, b) / 255 * 100;
-            let [h] = rgb.hsl(r, g, b);
-            return (a) ? [h, w, bVal, a] : [h, w, bVal];
+            let _b = 100 - Math.max(r, g, b) / 255 * 100;
+			let h = rgb.hsl([r, g, b])[0];
+
+			return Array.isArray(args[0])
+				? (a !== undefined ? [h,w,_b,a] : [h,w,_b])			
+				: (a !== undefined ? { h,w,b:_b,a } : { h,w,b:_b })
         },
 
         cmyk: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             let c = 1 - r / 255,
                 m = 1 - g / 255,
                 y = 1 - b / 255;
             let k = Math.min(c, m, y);
-            if (k === 1) return [0, 0, 0, 100, a];
-            return (a) ? [
-                ((c - k) / (1 - k) * 100),
-                ((m - k) / (1 - k) * 100),
-                ((y - k) / (1 - k) * 100),
-                (k * 100),
-                a
-            ] : [
-                ((c - k) / (1 - k) * 100),
-                ((m - k) / (1 - k) * 100),
-                ((y - k) / (1 - k) * 100),
-                (k * 100)
-            ];
+            if (k === 1) return (Array.isArray(arg[0]))
+				?[0, 0, 0, 100, a]
+				:{c,m,y,k,a}
+
+                c=((c - k) / (1 - k) * 100)
+                m=((m - k) / (1 - k) * 100)
+                y=((y - k) / (1 - k) * 100)
+                k=(k * 100)
+			
+			return Array.isArray(args[0])
+				? (a !== undefined ? [c,m,y,k,a] : [c,m,y,k])			
+				: (a !== undefined ? { c,m,y,k,a } : { c,m,y,k})
         },
-        hsv: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+/*        hsv: (...args) => {
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             r /= 255, g /= 255, b /= 255;
 
@@ -323,9 +355,11 @@ const color = function() {
 
             return (a) ? [h, s, v, a] : [h, s, v];
         },
-
+*/
         xyz: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             r /= 255
             g /= 255
@@ -358,16 +392,22 @@ const color = function() {
             const y = r * 0.2126 + g * 0.7152 + b * 0.0722
             const z = r * 0.0193 + g * 0.1192 + b * 0.9505
 
-            return (a) ? [x, y, z, a] : [x, y, z];
+            //return (a) ? [x, y, z, a] : [x, y, z];
+			return Array.isArray(args[0])
+				? (a !== undefined ? [x,y,z,a] : [x,y,z])			
+				: (a !== undefined ? { x,y,z,a } : { x,y,z})
         },
 
         lab: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
 
             r = r / 255,
-                g = g / 255;
+            g = g / 255;
             b = b / 255;
+			
             let x, y, z;
 
             r = (r > 0.04045) ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
@@ -382,22 +422,37 @@ const color = function() {
             y = (y > 0.008856) ? Math.pow(y, 1 / 3) : (7.787 * y) + 16 / 116;
             z = (z > 0.008856) ? Math.pow(z, 1 / 3) : (7.787 * z) + 16 / 116;
 
-            return (a) ? [(116 * y) - 16, 500 * (x - y), 200 * (y - z), a] : [(116 * y) - 16, 500 * (x - y), 200 * (y - z)]
+			let _l=(116 * y) - 16,
+				_a=500 * (x - y),
+				_b=200 * (y - z)
+
+			return Array.isArray(args[0])
+				? (a !== undefined ? [_l,_a,_b,a] : [_l,_a,_b])			
+				: (a !== undefined ? { l:_l,a:_a,b:_b,A:a } : { l:_l,a:_a,b:_b})	
         },
 
 
         lch: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
-            let [l, a_, b_] = rgb.lab(r, g, b);
+			
+            let [l, a_, b_] = rgb.lab([r, g, b]);
             let c = Math.sqrt(a_ ** 2 + b_ ** 2);
             let h = Math.atan2(b_, a_) * (180 / Math.PI);
             if (h < 0) h += 360;
-            return (a) ? [l, c, h, a] : [l, c, h];
+            //return (a) ? [l, c, h, a] : [l, c, h
+			
+			return Array.isArray(args[0])
+				? (a !== undefined ? [l, c, h, a] : [l, c, h])			
+				: (a !== undefined ? { l, c, h, a } : { l, c, h})
         },
 
         hcv: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let a = _[3];
             // Normalize RGB values (0-255 -> 0-1)
 
@@ -405,8 +460,8 @@ const color = function() {
 
             const m = Math.min(...rgb);
             const M = Math.max(...rgb);
-            const C = M - m; // Chroma
-            const V = M; // Value
+            let C = M - m; // Chroma
+            let V = M; // Value
 
             let H = 0;
             if (C > 0) {
@@ -420,27 +475,46 @@ const color = function() {
                 H /= 6; // Normalize to [0,1]
             }
 
-            return (a) ? [H, C, V, a] : [H, C, V];
+			H*=360
+			C*=100
+			V*=100
+            //return (a) ? [H, C, V, a] : [H, C, V];
+			return Array.isArray(args[0])
+				? (a !== undefined ? [H,C,V, a] : [H,C,V])			
+				: (a !== undefined ? { h:H,c:C,v:V, a } : { h:H,c:C,v:V})			
+			
         },
         yuv: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             let y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
             let u = -0.09991 * r - 0.33609 * g + 0.436 * b;
             let v = 0.615 * r - 0.55861 * g - 0.05639 * b;
-            return (a) ? [y, u, v, a] : [y, u, v];
+            //return (a) ? [y, u, v, a] : [y, u, v];
+			return Array.isArray(args[0])
+				? (a !== undefined ? [y,u,v, a] : [y,u,v])			
+				: (a !== undefined ? { y,u,v, a } : { y,u,v})				
         },
         ycbcr: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             let y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
             let cb = -0.1146 * r - 0.3854 * g + 0.5 * b + 0.5;
             let cr = 0.5 * r - 0.4542 * g - 0.0458 * b + 0.5;
-            return (a) ? [y, cb, cr, a] : [y, cb, cr];
+            //return (a) ? [y, cb, cr, a] : [y, cb, cr];
+			return Array.isArray(args[0])
+				? (a !== undefined ? [y,cb,cr, a] : [y,cb,cr])			
+				: (a !== undefined ? { y,cb,cr, a } : { y,b,cr})			
         },
 
         name: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             return Object.entries(names).reduce((best, [key, val]) => {
                 let d = distance([r, g, b], val);
@@ -449,35 +523,48 @@ const color = function() {
         },
 
         toString: (args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0])
+				? args[0]
+				:(typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             return a < 1 ? `rgba(${r},${g},${b},${a})` : `rgb(${r},${g},${b})`
         },
-
-
     };
 
     const hsl = {
         hex: (...args) => rgb.hex(hsl.rgb(...args)),
-
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
-            let [h, s, l, a] = _;
-            s /= 100, l /= 100;
-            let c = (1 - Math.abs(2 * l - 1)) * s;
-            let x = c * (1 - Math.abs((h / 60) % 2 - 1));
-            let m = l - c / 2;
-            let [r, g, b] = h < 60 ? [c, x, 0] :
-                h < 120 ? [x, c, 0] :
-                h < 180 ? [0, c, x] :
-                h < 240 ? [0, x, c] :
-                h < 300 ? [x, 0, c] : [c, 0, x];
-            return (a) ? [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255), a] : [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
-        },
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].h, args[0].s, args[0].l, args[0].a] : args);
+
+			let [h, s, l, a] = _;
+			s /= 100, l /= 100;
+
+			let c = (1 - Math.abs(2 * l - 1)) * s;
+			let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+			let m = l - c / 2;
+
+			let [r, g, b] = 
+				h < 60  ? [c, x, 0] :
+				h < 120 ? [x, c, 0] :
+				h < 180 ? [0, c, x] :
+				h < 240 ? [0, x, c] :
+				h < 300 ? [x, 0, c] : 
+						  [c, 0, x];
+
+			r = Math.round((r + m) * 255);
+			g = Math.round((g + m) * 255);
+			b = Math.round((b + m) * 255);
+
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [r, g, b, a] : [r, g, b])		
+				: (a !== undefined ? { r, g, b, a } : { r, g, b })
+
+		},
         hsb: (...args) => rgb.hsb(hsl.rgb(...args)),
         hwb: (...args) => rgb.hwb(hsl.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(hsl.rgb(...args)),
-        hsv: (...args) => rgb.hsv(hsl.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(hsl.rgb(...args)),
         xyz: (...args) => rgb.xyz(hsl.rgb(...args)),
         lab: (...args) => rgb.lab(hsl.rgb(...args)),
         lch: (...argsa) => rgb.lch(hsl.rgb(...args)),
@@ -496,18 +583,28 @@ const color = function() {
     const hsb = {
         hex: (...args) => rgb.hex(hsb.rgb(...args)),
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].h, args[0].s, args[0].b, args[0].a] : args);
             let [h, s, b, a] = _;
+
             s /= 100;
             b /= 100;
             const k = (n) => (n + h / 60) % 6;
             const f = (n) => b * (1 - s * Math.max(0, Math.min(k(n), 4 - k(n), 1)));
-            return (a) ? [255 * f(5), 255 * f(3), 255 * f(1), a] : [255 * f(5), 255 * f(3), 255 * f(1)];
-        },
+//            return (a) ? , , , a] : [255 * f(5), 255 * f(3), 255 * f(1)];
+			r=255 * f(5)
+			g=255 * f(3)
+			b=255 * f(1)
+			
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [r, g, b, a] : [r, g, b])		
+				: (a !== undefined ? { r, g, b, a } : { r, g, b })
+
+			},
         hsl: (...args) => rgb.hsl(hsb.rgb(...args)),
         hwb: (...args) => rgb.hwb(hsb.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(hsb.rgb(...args)),
-        hsv: (...args) => rgb.hsv(hsb.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(hsb.rgb(...args)),
         xyz: (...args) => rgb.xyz(hsb.rgb(...args)),
         lab: (...args) => rgb.lab(hsb.rgb(...args)),
         lch: (...args) => rgb.lch(hsb.rgb(...args)),
@@ -521,7 +618,9 @@ const color = function() {
     const hwb = {
         hex: (...args) => rgb.hex(hwb.rgb(...args)),
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].h, args[0].w, args[0].b, args[0].a] : args);
+
             let [h, w, b, a] = _;
             w /= 100;
             b /= 100;
@@ -529,13 +628,16 @@ const color = function() {
                 let gray = w / (w + b) * 255;
                 return [gray, gray, gray, a];
             }
-            let rgb = hsl.rgb(h, 100, 50);
+            let _rgb = hsl.rgb([h, 100, 50]);
+			
             for (let i = 0; i < 3; i++) {
-                rgb[i] *= (1 - w - b);
-                rgb[i] += w * 255;
+                _rgb[i] *= (1 - w - b);
+                _rgb[i] += w * 255;
             }
-            if (a) rgb[3] = a;
-            return rgb;
+
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [..._rgb, a] : [..._rgb])		
+				: (a !== undefined ? {r:_rgb[0],g:_rgb[1],b:_rgb[2],a} : {r:_rgb[0],g:_rgb[1],b:_rgb[2]})			
         },
 
 
@@ -544,8 +646,7 @@ const color = function() {
         hsl: (...args) => rgb.hsl(hwb.rgb(...args)),
         hsb: (...args) => rgb.hsb(hwb.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(hwb.rgb(...args)),
-
-        hsv: (...args) => rgb.hsv(hwb.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(hwb.rgb(...args)),
         xyz: (...args) => rgb.xyz(hwb.rgb(...args)),
         lab: (...args) => rgb.lab(hwb.rgb(...args)),
         lch: (...args) => rgb.lch(hwb.rgb(...args)),
@@ -559,18 +660,22 @@ const color = function() {
     const cmyk = {
         hex: (...args) => rgb.hex(cmyk.rgb(...args)),
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].c, args[0].m, args[0].y, args[0].k, args[0].a] : args);
             let [c, m, y, k, a] = _;
+
             let r = 255 * (1 - c / 100) * (1 - k / 100);
             let g = 255 * (1 - m / 100) * (1 - k / 100);
             let b = 255 * (1 - y / 100) * (1 - k / 100);
-            return (a) ? [r, g, b, a] : [r, g, b];
+			
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [r, g, b, a] : [r, g, b])		
+				: (a !== undefined ? { r, g, b, a } : { r, g, b })
         },
         hsl: (...args) => rgb.hsl(cmyk.rgb(...args)),
         hsb: (...args) => rgb.hsb(cmyk.rgb(...args)),
         hwb: (...args) => rgb.hwb(cmyk.rgb(...args)),
-
-        hsv: (...args) => rgb.hsv(cmyk.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(cmyk.rgb(...args)),
         xyz: (...args) => rgb.xyz(cmyk.rgb(...args)),
         lab: (...args) => rgb.lab(cmyk.rgb(...args)),
         lch: (...args) => rgb.lch(cmyk.rgb(...args)),
@@ -581,7 +686,7 @@ const color = function() {
 
     };
 
-    const hsv = {
+/*    const hsv = {
         hex: (...args) => rgb.hex(hsv.rgb(...args)),
         rgb: (...args) => {
             let _ = (Array.isArray(args[0])) ? args[0] : args;
@@ -618,10 +723,11 @@ const color = function() {
 
             return (a) ? [r * 255, g * 255, b * 255, a] : [r * 255, g * 255, b * 255];
         },
+
         hsl: (...args) => rgb.hsl(hsv.rgb(...args)),
         hsb: (...args) => rgb.hsb(hsv.rgb(...args)),
         hwb: (...args) => rgb.hwb(hsv.rgb(...args)),
-        hsv: (...args) => rgb.hsv(hsv.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(hsv.rgb(...args)),
         xyz: (...args) => rgb.xyz(hsv.rgb(...args)),
         lab: (...args) => rgb.lab(hsv.rgb(...args)),
         lch: (...args) => rgb.lch(hsv.rgb(...args)),
@@ -630,14 +736,16 @@ const color = function() {
         ycbcr: (...args) => rgb.ycbcr(hsv.rgb(...args)),
 
         name: (...args) => rgb.name(hsv.rgb(...args)),
-    }
-
+    };
+*/
 
     const xyz = {
         hex: (...args) => rgb.hex(xyz.rgb(...args)),
 
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].x, args[0].y, args[0].z, args[0].a] : args);
+
             let [x, y, z, a] = _;
             // Observer = 2°, Illuminant = D65
             x = x / 100 // X from 0 to 95.047
@@ -670,13 +778,15 @@ const color = function() {
             g *= 255
             b *= 255
 
-            return (a) ? [r, g, b, a] : [r, g, b];
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [r, g, b, a] : [r, g, b])		
+				: (a !== undefined ? { r, g, b, a } : { r, g, b })
         },
         hsl: (...args) => rgb.hsl(xyz.rgb(...args)),
         hsb: (...args) => rgb.hsb(xyz.rgb(...args)),
         hwb: (...args) => rgb.hwb(xyz.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(xyz.rgb(...args)),
-        hsv: (...args) => rgb.hsv(xyz.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(xyz.rgb(...args)),
         xyz: (...args) => rgb.xyz(xyz.rgb(...args)),
         lab: (...args) => rgb.lab(xyz.rgb(...args)),
         lch: (...args) => rgb.lch(xyz.rgb(...args)),
@@ -689,39 +799,41 @@ const color = function() {
     const lab = {
         hex: (l, a, b) => rgb.hex(lab.rgb(l, a, b)),
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
-            let [l_, a_, b_, _a] = _;
-            let y = (l_ + 16) / 116,
-                x = a_ / 500 + y,
-                z = y - b_ / 200,
-                r, g, b;
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].l, args[0].a, args[0].b, args[0].A] : args);
+
+            let [l, a, b, A] = _;
+            let y = (l + 16) / 116,
+                x = a / 500 + y,
+                z = y - b / 200
+                
+			let _r, _g, _b;
 
             x = 0.95047 * ((x * x * x > 0.008856) ? x * x * x : (x - 16 / 116) / 7.787);
             y = 1.00000 * ((y * y * y > 0.008856) ? y * y * y : (y - 16 / 116) / 7.787);
             z = 1.08883 * ((z * z * z > 0.008856) ? z * z * z : (z - 16 / 116) / 7.787);
 
-            r = x * 3.2406 + y * -1.5372 + z * -0.4986;
-            g = x * -0.9689 + y * 1.8758 + z * 0.0415;
-            b = x * 0.0557 + y * -0.2040 + z * 1.0570;
+            _r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+            _g = x * -0.9689 + y * 1.8758 + z * 0.0415;
+            _b = x * 0.0557 + y * -0.2040 + z * 1.0570;
 
-            r = (r > 0.0031308) ? (1.055 * Math.pow(r, 1 / 2.4) - 0.055) : 12.92 * r;
-            g = (g > 0.0031308) ? (1.055 * Math.pow(g, 1 / 2.4) - 0.055) : 12.92 * g;
-            b = (b > 0.0031308) ? (1.055 * Math.pow(b, 1 / 2.4) - 0.055) : 12.92 * b;
+            _r = (_r > 0.0031308) ? (1.055 * Math.pow(_r, 1 / 2.4) - 0.055) : 12.92 * _r;
+            _g = (_g > 0.0031308) ? (1.055 * Math.pow(_g, 1 / 2.4) - 0.055) : 12.92 * _g;
+            _b = (_b > 0.0031308) ? (1.055 * Math.pow(_b, 1 / 2.4) - 0.055) : 12.92 * _b;
 
-            return (_a) ? [Math.max(0, Math.min(1, r)) * 255,
-                Math.max(0, Math.min(1, g)) * 255,
-                Math.max(0, Math.min(1, b)) * 255,
-                _a
-            ] : [Math.max(0, Math.min(1, r)) * 255,
-                Math.max(0, Math.min(1, g)) * 255,
-                Math.max(0, Math.min(1, b)) * 255
-            ]
+			_r=Math.max(0, Math.min(1, _r)) * 255,
+            _g=Math.max(0, Math.min(1, _g)) * 255,
+            _b=Math.max(0, Math.min(1, _b)) * 255
+
+			return Array.isArray(args[0]) 
+				? (A !== undefined ? [_r, _g, _b, A] : [_r, _g, _b])		
+				: (A !== undefined ? { r:_r, g:_g, b:_b, A } : { r:_r, g:_g, b:_b })			
         },
         hsl: (...args) => rgb.hsl(lab.rgb(...args)),
         hsb: (...args) => rgb.hsb(lab.rgb(...args)),
         hwb: (...args) => rgb.hwb(lab.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(lab.rgb(...args)),
-        hsv: (...args) => rgb.hsv(lab.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(lab.rgb(...args)),
         xyz: (...args) => rgb.xyz(lab.rgb(...args)),
         lab: (...args) => rgb.lab(lab.rgb(...args)),
         lch: (...args) => rgb.lch(lab.rgb(...args)),
@@ -735,19 +847,26 @@ const color = function() {
     const lch = {
         hex: (...args) => rgb.hex(lch.rgb(...args)),
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].l, args[0].c, args[0].h, args[0].a] : args);
+
             let [l, c, h, a] = _;
             let hr = (h * Math.PI) / 180;
             let a_ = c * Math.cos(hr);
             let b_ = c * Math.sin(hr);
-            let rgbColor = lab.rgb(l, a_, b_);
-            return (a) ? [...rgbColor, a] : rgbColor;
+            let [r,g,b] = lab.rgb([l, a_, b_]);
+			
+            //return (a) ? [...rgbColor, a] : rgbColor;
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [r, g, b, a] : [r, g, b])		
+				: (a !== undefined ? { r, g, b, a } : { r, g, b })
+			
         },
         hsl: (...args) => rgb.hsl(lch.rgb(...args)),
         hsb: (...args) => rgb.hsb(lch.rgb(...args)),
         hwb: (...args) => rgb.hwb(lch.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(lch.rgb(...args)),
-        hsv: (...args) => rgb.hsv(lch.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(lch.rgb(...args)),
         xyz: (...args) => rgb.xyz(lch.rgb(...args)),
         lab: (...args) => rgb.lab(lch.rgb(...args)),
         lch: (...args) => rgb.lch(lch.rgb(...args)),
@@ -761,22 +880,32 @@ const color = function() {
     const hcv = { //former hcg
         hex: (...args) => rgb.hex(hcv.rgb(...args)),
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+            //let _ = (Array.isArray(args[0])) ? args[0] : args;
+
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].h, args[0].c, args[0].v, args[0].a] : args);
+
             let [H, C, V, a] = _;
+			H/=360
+			C/=100
+			V/=100
             const h = H * 6.0; // Scale back to [0,6] range
             const rgb = [h, h, h].map((v, i) =>
                 Math.min(Math.max(Math.abs(mod(v - shift[i], 6.0) - 3.0) - 1.0, 0.0), 1.0)
             );
             const m = V - C; // Corrected adjustment value
             let [r, g, b] = rgb.map((ch) => (ch * C + m) * 255).map(Math.round); // Scale back to 0-255
-            return (a) ? [r, g, b, a] : [r, g, b];
+            //return (a) ? [r, g, b, a] : [r, g, b];
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [r, g, b, a] : [r, g, b])		
+				: (a !== undefined ? { r, g, b, a } : { r, g, b })			
         },
 
         hsl: (...args) => rgb.hsl(hcv.rgb(...args)),
         hsb: (...args) => rgb.hsb(hcv.rgb(...args)),
         hwb: (...args) => rgb.hwb(hcv.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(hcv.rgb(...args)),
-        hsv: (...args) => rgb.hsv(hcv.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(hcv.rgb(...args)),
         xyz: (...args) => rgb.xyz(hcv.rgb(...args)),
         lab: (...args) => rgb.lab(hcv.rgb(...args)),
         lch: (...args) => rgb.lch(hcv.rgb(...args)),
@@ -791,18 +920,22 @@ const color = function() {
     const yuv = {
         hex: (...args) => rgb.hex(hcv.rgb(...args)),
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].y, args[0].u, args[0].v, args[0].a] : args);
+
             let [y, u, v, a] = _;
             let r = y + 1.28033 * v;
             let g = y - 0.21482 * u - 0.38059 * v;
             let b = y + 2.12798 * u;
-            return (a) ? [r, g, b, a] : [r, g, b];
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [r, g, b, a] : [r, g, b])		
+				: (a !== undefined ? { r, g, b, a } : { r, g, b })
         },
         hsl: (...args) => rgb.hsl(yuv.rgb(...args)),
         hsb: (...args) => rgb.hsb(yuv.rgb(...args)),
         hwb: (...args) => rgb.hwb(yuv.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(yuv.rgb(...args)),
-        hsv: (...args) => rgb.hsv(yuv.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(yuv.rgb(...args)),
         xyz: (...args) => rgb.xyz(yuv.rgb(...args)),
         lab: (...args) => rgb.lab(yuv.rgb(...args)),
         lch: (...args) => rgb.lch(yuv.rgb(...args)),
@@ -816,18 +949,22 @@ const color = function() {
     const ycbcr = {
         hex: (...args) => rgb.hex(hcv.rgb(...args)),
         rgb: (...args) => {
-            let _ = (Array.isArray(args[0])) ? args[0] : args;
+			let _ = Array.isArray(args[0]) ? args[0] : 
+					(typeof args[0] === 'object' ? [args[0].y, args[0].cb, args[0].cr, args[0].a] : args);
+
             let [y, cb, cr, a] = _;
             let r = y + 1.5748 * (cr - 0.5);
             let g = y - 0.1873 * (cb - 0.5) - 0.4681 * (cr - 0.5);
             let b = y + 1.8556 * (cb - 0.5);
-            return (a) ? [r, g, b, a] : [r, g, b];
+			return Array.isArray(args[0]) 
+				? (a !== undefined ? [r, g, b, a] : [r, g, b])		
+				: (a !== undefined ? { r, g, b, a } : { r, g, b })
         },
         hsl: (...args) => rgb.hsl(ycbcr.rgb(...args)),
         hsb: (...args) => rgb.hsb(ycbcr.rgb(...args)),
         hwb: (...args) => rgb.hwb(ycbcr.rgb(...args)),
         cmyk: (...args) => rgb.cmyk(ycbcr.rgb(...args)),
-        hsv: (...args) => rgb.hsv(ycbcr.rgb(...args)),
+       // hsv: (...args) => rgb.hsv(ycbcr.rgb(...args)),
         xyz: (...args) => rgb.xyz(ycbcr.rgb(...args)),
         lab: (...args) => rgb.lab(ycbcr.rgb(...args)),
         lch: (...args) => rgb.lch(ycbcr.rgb(...args)),
@@ -846,7 +983,7 @@ const color = function() {
         hsb: (n) => rgb.hsb(names[near(n)]),
         hwb: (n) => rgb.hwb(names[near(n)]),
         cmyk: (n) => rgb.cmyk(names[near(n)]),
-        hsv: (n) => rgb.hsv(names[near(n)]),
+       // hsv: (n) => rgb.hsv(names[near(n)]),
         xyz: (n) => rgb.xyz(names[near(n)]),
         lab: (n) => rgb.lab(names[near(n)]),
         lch: (n) => rgb.lch(names[near(n)]),
@@ -1021,19 +1158,19 @@ const color = function() {
     }
 
     return {
-        hex,
-        rgb,
-        hsl,
-        hsb,
-        hwb,
-        cmyk,
-        hsv,
-        xyz,
-        lab,
-        lch,
-        hcv,
+		hex,
+		rgb,//R (Red),  G (Green), B (Blue): 0 - 255 (integer)
+        hsl,//H (Hue): 0 - 360°, S (Saturation): 0 - 100%, L (Lightness): 0 - 100%
+        hsb,//=hsv H (Hue): 0 - 360°, S (Saturation): 0 - 100%, B (V) (Brightness/Value): 0 - 100%
+        hwb,//H (Hue): 0 - 360°, W (Whiteness): 0 - 100%, B (Blackness): 0 - 100%
+        cmyk,//C (Cyan), M (Magenta), Y (Yellow), K (Black): 0 - 100%
+        //hsv =hsb,
+        xyz,//X: 0 - ~95.047, Y: 0 - ~100.000 (Y is perceptual luminance), Z: 0 - ~108.883
+        lab,//L (Lightness): 0 - 100, a (Green to Red): ~ -128 to +127,b (Blue to Yellow): ~ -128 to +127
+        lch,//L (Lightness): 0 - 100, C (Chroma): 0 - ~150 (No fixed max, depends on color gamut), H (Hue): 0 - 360°
+        hcv,//=former hcg, H (Hue): 0 - 360°, C (Chroma): 0 - 100, V (Value): 0 - 100
         yuv,
-        ycbcr,
+        ycbcr, 
         names,
         name,
         distance,
