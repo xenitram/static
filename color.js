@@ -1358,21 +1358,21 @@ const color = function() {
         hex, // Converts color values to hex format
         rgb, // R (Red), G (Green), B (Blue): 0 - 255 (integer)
         hsl, // H (Hue): 0 - 360°, S (Saturation): 0 - 100%, L (Lightness): 0 - 100%
-        hsb, // =hsv H (Hue): 0 - 360°, S (Saturation): 0 - 100%, B (V) (Brightness/Value): 0 - 100%
+        hsb, // = hsv, H (Hue): 0 - 360°, S (Saturation): 0 - 100%, B (Brightness): 0 - 100%
         hwb, // H (Hue): 0 - 360°, W (Whiteness): 0 - 100%, B (Blackness): 0 - 100%
         cmyk, // C (Cyan), M (Magenta), Y (Yellow), K (Black): 0 - 100%
         xyz, // X: 0 - ~95.047, Y: 0 - ~100.000 (Y is perceptual luminance), Z: 0 - ~108.883
         lab, // L (Lightness): 0 - 100, a (Green to Red): ~ -128 to +127, b (Blue to Yellow): ~ -128 to +127
         lch, // L (Lightness): 0 - 100, C (Chroma): 0 - ~150 (No fixed max, depends on color gamut), H (Hue): 0 - 360°
-        hcv, // =former hcg, H (Hue): 0 - 360°, C (Chroma): 0 - 100, V (Value): 0 - 100 
+        hcv, // = former hcg, H (Hue): 0 - 360°, C (Chroma): 0 - 100, V (Value): 0 - 100
         yuv, // Y (Luma): 16 - 235, U (Chroma Blue): -0.436 to 0.436 or 16 - 240, V (Chroma Red): -0.615 to 0.615 or 16 - 240
         ycbcr, // Y (Luma): 16 - 235, Cb (Chroma Blue): 16 - 240, Cr (Chroma Red): 16 - 240
         names, // Named colors and their RGB values
         name, // Get the name of the nearest color
         distance, // Calculate distance between two colors
         near, // Find the nearest named color
-        heatMap, // Generate a heat map color based on value, H 0 cold - 1 hot (0-240), S 100, L 50 
-        grayscale, // Generate a grayscale color based on value,H 0, S 0, L 0 black 1 white (0-100)
+        heatMap, // Generate a heat map color based on value, H 0 cold - 1 hot (0-240), S 100, L 50
+        grayscale, // Generate a grayscale color based on value, H 0, S 0, L 0 black 1 white (0-100)
         pastelColor, // Generate a pastel color, H 0-1 (0-360), S 0-1 (60-80), L 0-1 (70-90)
         warm, // Generate a warm color, H 0-1, S 0-1, L 0-1
         cold, // Generate a cold color, H 0-1, S 0-1, L 0-1
@@ -1382,15 +1382,13 @@ const color = function() {
         neutral, // Generate a neutral color, H 0-1, S 0-1, B 0-1
         neon, // Generate a neon color, H 0-1, S 0-1, B 0-1
         shade, // Generate a shaded color, H 0-1, S 0-1, B 0-1
-        muted,
-        bright,
-        warm,
-        cool,
-        vintage,
-        dark,
-        light,
-        metallic,
-        fluorescent,
+        muted, // Generate a muted color, H 0-1, S 0-1, B 0-1
+        bright, // Generate a bright color, H 0-1, S 0-1, B 0-1
+        vintage, // Generate a vintage color, H 0-1, S 0-1, B 0-1
+        dark, // Generate a dark color, H 0-1, S 0-1, B 0-1
+        light, // Generate a light color, H 0-1, S 0-1, B 0-1
+        metallic, // Generate a metallic color, H 0-1, S 0-1, B 0-1
+        fluorescent, // Generate a fluorescent color, H 0-1, S 0-1, B 0-1
         complementary, // Generate a complementary color
         triadic, // Generate a triadic color scheme
         analogous, // Generate an analogous color scheme
