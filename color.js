@@ -334,15 +334,13 @@ const color = function() {
                 m = 1 - g / 255,
                 y = 1 - b / 255;
             let k = Math.min(c, m, y);
-            if (k === 1) return (Array.isArray(arg[0])) ?
-                [0, 0, 0, 100, a] :
-                {
-                    c,
-                    m,
-                    y,
-                    k,
-                    a
-                }
+            if (k === 1) return (Array.isArray(arg[0])) ? [0, 0, 0, 100, a] : {
+                c,
+                m,
+                y,
+                k,
+                a
+            }
 
             c = ((c - k) / (1 - k) * 100)
             m = ((m - k) / (1 - k) * 100)
@@ -1244,12 +1242,22 @@ const color = function() {
         };
     }
 
+
     const pastel = (...args) => adjustColor(args, 21, 7, 96, 7); // S: 21-28, B: 96-103
     const jewel = (...args) => adjustColor(args, 60, 20, 50, 20); // S: 60-80, B: 50-70
     const earth = (...args) => adjustColor(args, 35, 10, 60, 10); // S: 35-45, B: 60-70
     const neutral = (...args) => adjustColor(args, 10, 10, 50, 10); // S: 10-20, B: 50-60
     const neon = (...args) => adjustColor(args, 80, 10, 90, 10); // S: 80-90, B: 90-100
     const shade = (...args) => adjustColor(args, 40, 10, 30, 10); // S: 40-50, B: 30-40
+    const muted = (...args) => adjustColor(args, 25, 10, 55, 10); // S: 25-35, B: 55-65
+    const bright = (...args) => adjustColor(args, 70, 20, 80, 10); // S: 70-90, B: 80-90
+    const warm = (...args) => adjustColor(args, 50, 15, 65, 10); // S: 50-65, B: 65-75
+    const cool = (...args) => adjustColor(args, 55, 15, 70, 10); // S: 55-70, B: 70-80
+    const vintage = (...args) => adjustColor(args, 30, 10, 50, 10); // S: 30-40, B: 50-60
+    const dark = (...args) => adjustColor(args, 50, 10, 25, 10); // S: 50-60, B: 25-35
+    const light = (...args) => adjustColor(args, 15, 10, 85, 10); // S: 15-25, B: 85-95
+    const metallic = (...args) => adjustColor(args, 40, 10, 75, 5); // S: 40-50, B: 75-80
+    const fluorescent = (...args) => adjustColor(args, 85, 10, 95, 5); // S: 85-95, B: 95-100
 
     function adjustColor(args, sBase, sRange, bBase, bRange) {
         let _ = Array.isArray(args[0]) ? args[0] :
@@ -1368,12 +1376,21 @@ const color = function() {
         pastelColor, // Generate a pastel color, H 0-1 (0-360), S 0-1 (60-80), L 0-1 (70-90)
         warm, // Generate a warm color, H 0-1, S 0-1, L 0-1
         cold, // Generate a cold color, H 0-1, S 0-1, L 0-1
-        jewel, // Generate a jewel-tone color, H 0-1, S 0-1 (83-93), B 0-1 (76-96)
+        jewel, // Generate a jewel-tone color, H 0-1, S 0-1, B 0-1
         pastel, // Generate a pastel color, H 0-1, S 0-1, B 0-1
         earth, // Generate an earth-tone color, H 0-1, S 0-1, B 0-1
         neutral, // Generate a neutral color, H 0-1, S 0-1, B 0-1
         neon, // Generate a neon color, H 0-1, S 0-1, B 0-1
         shade, // Generate a shaded color, H 0-1, S 0-1, B 0-1
+        muted,
+        bright,
+        warm,
+        cool,
+        vintage,
+        dark,
+        light,
+        metallic,
+        fluorescent,
         complementary, // Generate a complementary color
         triadic, // Generate a triadic color scheme
         analogous, // Generate an analogous color scheme
