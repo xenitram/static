@@ -16,25 +16,23 @@ const color = function() {
         }, ['', Infinity])[0];
 
     }
-    const levenshteinDistance = (s, t) => {
-        if (!s.length) return t.length;
-        if (!t.length) return s.length;
-        const arr = [];
-        for (let i = 0; i <= t.length; i++) {
-            arr[i] = [i];
-            for (let j = 1; j <= s.length; j++) {
-                arr[i][j] =
-                    i === 0 ?
-                    j :
-                    Math.min(
-                        arr[i - 1][j] + 1,
-                        arr[i][j - 1] + 1,
-                        arr[i - 1][j - 1] + (s[j - 1] === t[i - 1] ? 0 : 1)
-                    );
-            }
-        }
-        return arr[t.length][s.length];
-    };
+
+  const levenshteinDistance = (s, t) => {
+    if (!s.length) return t.length;
+    if (!t.length) return s.length;
+    const arr = Array.from({ length: t.length + 1 }, (_, i) => [i]);
+    for (let i = 1; i <= s.length; i++) arr[0][i] = i;
+    for (let i = 1; i <= t.length; i++) {
+      for (let j = 1; j <= s.length; j++) {
+        arr[i][j] = Math.min(
+          arr[i - 1][j] + 1,
+          arr[i][j - 1] + 1,
+          arr[i - 1][j - 1] + (s[j - 1] === t[i - 1] ? 0 : 1)
+        );
+      }
+    }
+    return arr[t.length][s.length];
+  };
 
     const names = {
         aliceblue: [240, 248, 255],
