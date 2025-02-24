@@ -251,8 +251,12 @@ const dom = function() {
 
         // Return the element with the set attributes, ID, and classes
         return element;
-    }
-
+    };
+    
+	function text(str) {
+	  return document.createTextNode(str != null ? str : "");
+	};
+    
     const event = {
         on: (el, ...args) => {
             if (!(el instanceof EventTarget)) throw new TypeError("Provided element is not an EventTarget");
@@ -605,10 +609,12 @@ const dom = function() {
         replaceChildren,
         create: {
             html,
-            svg
+            svg,
+            text
         },
         html,
         svg,
+        text,
         event,
         animate,
         animation,
