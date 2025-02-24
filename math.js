@@ -329,8 +329,8 @@ const math = function() {
         arcsin: Math.asin,
         arccos: Math.acos,
         arctan: Math.atan,
-        deg2rad: (deg) => deg * Math.PI / 180,
-        rad2deg: (rad) => rad * 180 / Math.PI,
+        deg:{rad: (deg) => deg * Math.PI / 180},
+        rad:{deg: (rad) => rad * 180 / Math.PI},            
         lawOfSines: (a, A, B) => {
             // Law of Sines: a / sin(A) = b / sin(B)
             // To calculate b, we can rearrange the formula: b = a * (sin(B) / sin(A))
@@ -353,7 +353,6 @@ const math = function() {
 
     // 6. Vector and Matrix Operations
     const linearAlgebra = {
-
 
         vector: {
             add: (v1, v2) => {
