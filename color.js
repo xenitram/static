@@ -211,6 +211,11 @@ const color = function() {
     };
 
     const rgb = {
+        distance:(a,b){
+            a=(Array.isArray(a))?a:[a.r,a.g,a.b];
+            b=(Array.isArray(b))?b:[b.r,b.g,b.b];       
+            return distance(a,b);
+        },
         hex: (...args) => {
             let _ = Array.isArray(args[0]) ? args[0] : args;
             return `#${_.slice(0, 4) // Ensure at most 4 values (RGBA)
@@ -612,7 +617,7 @@ const color = function() {
                 (typeof args[0] === 'object' ? [args[0].r, args[0].g, args[0].b, args[0].a] : args);
             let [r, g, b, a] = _;
             return Object.entries(names).reduce((best, [key, val]) => {
-                let d = distance([r, g, b], val);
+                let d = rgb.distance([r, g, b], val);
                 return d < best[1] ? [key, d] : best;
             }, ['', Infinity])[0];
         },
@@ -1367,9 +1372,9 @@ const color = function() {
         hcv, // = former hcg, H (Hue): 0 - 360°, C (Chroma): 0 - 100, V (Value): 0 - 100
         yuv, // Y (Luma): 16 - 235, U (Chroma Blue): -0.436 to 0.436 or 16 - 240, V (Chroma Red): -0.615 to 0.615 or 16 - 240
         ycbcr, // Y (Luma): 16 - 235, Cb (Chroma Blue): 16 - 240, Cr (Chroma Red): 16 - 240
+        //distance,
         names, // Named colors and their RGB values
         name, // Get the name of the nearest color
-        distance, // Calculate distance between two colors
         near, // Find the nearest named color
         heatMap, // Generate a heat map color based on value, H 0 cold - 1 hot (0-240), S 100, L 50
         grayscale, // Generate a grayscale color based on value, H 0, S 0, L 0 black 1 white (0-100)
