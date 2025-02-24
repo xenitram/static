@@ -1210,7 +1210,7 @@ const color = function() {
         };
     }
 
-    const warm = (...args) => {
+/*    const warm = (...args) => {
         let _ = typeof args[0] === 'object' ? args[0] : args;
         let [h, s, l, a] = _;
 
@@ -1241,7 +1241,7 @@ const color = function() {
             a
         };
     }
-
+*/
 
     const pastel = (...args) => adjustColor(args, 21, 7, 96, 7); // S: 21-28, B: 96-103
     const jewel = (...args) => adjustColor(args, 60, 20, 50, 20); // S: 60-80, B: 50-70
