@@ -211,7 +211,7 @@ const color = function() {
     };
 
     const rgb = {
-        distance:(a,b){
+        distance:(a,b)=>{
             a=(Array.isArray(a))?a:[a.r,a.g,a.b];
             b=(Array.isArray(b))?b:[b.r,b.g,b.b];       
             return distance(a,b);
@@ -1379,14 +1379,16 @@ const color = function() {
         heatMap, // Generate a heat map color based on value, H 0 cold - 1 hot (0-240), S 100, L 50
         grayscale, // Generate a grayscale color based on value, H 0, S 0, L 0 black 1 white (0-100)
         //pastelColor, // Generate a pastel color, H 0-1 (0-360), S 0-1 (60-80), L 0-1 (70-90)
-        warm, // Generate a warm color, H 0-1, S 0-1, L 0-1
-        cold, // Generate a cold color, H 0-1, S 0-1, L 0-1
+        //warm, // Generate a warm color, H 0-1, S 0-1, L 0-1
+        //cold, // Generate a cold color, H 0-1, S 0-1, L 0-1
         jewel, // Generate a jewel-tone color, H 0-1, S 0-1, B 0-1
         pastel, // Generate a pastel color, H 0-1, S 0-1, B 0-1
         earth, // Generate an earth-tone color, H 0-1, S 0-1, B 0-1
         neutral, // Generate a neutral color, H 0-1, S 0-1, B 0-1
         neon, // Generate a neon color, H 0-1, S 0-1, B 0-1
         shade, // Generate a shaded color, H 0-1, S 0-1, B 0-1
+	warm, // Generate a warm color, H 0-1, S 0-1, B 0-1
+	cool, // Generate a cool color, H 0-1, S 0-1, B 0-1
         muted, // Generate a muted color, H 0-1, S 0-1, B 0-1
         bright, // Generate a bright color, H 0-1, S 0-1, B 0-1
         vintage, // Generate a vintage color, H 0-1, S 0-1, B 0-1
