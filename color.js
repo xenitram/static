@@ -339,7 +339,7 @@ const color = function() {
                 m = 1 - g / 255,
                 y = 1 - b / 255;
             let k = Math.min(c, m, y);
-            if (k === 1) return (Array.isArray(arg[0])) ? [0, 0, 0, 100, a] : {
+            if (k === 1) return (Array.isArray(args[0])) ? [0, 0, 0, 100, a] : {
                 c,
                 m,
                 y,
