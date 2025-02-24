@@ -1196,7 +1196,7 @@ const color = function() {
         }; // HSL (0, 0%, L%)
     }
 
-    const pastelColor = (...args) => {
+/*    const pastelColor = (...args) => {
         let _ = typeof args[0] === 'object' ? args[0] : args;
         let [h, s, l, a] = _;
         h = h * 360;
@@ -1210,7 +1210,7 @@ const color = function() {
         };
     }
 
-/*    const warm = (...args) => {
+    const warm = (...args) => {
         let _ = typeof args[0] === 'object' ? args[0] : args;
         let [h, s, l, a] = _;
 
@@ -1373,7 +1373,7 @@ const color = function() {
         near, // Find the nearest named color
         heatMap, // Generate a heat map color based on value, H 0 cold - 1 hot (0-240), S 100, L 50
         grayscale, // Generate a grayscale color based on value, H 0, S 0, L 0 black 1 white (0-100)
-        pastelColor, // Generate a pastel color, H 0-1 (0-360), S 0-1 (60-80), L 0-1 (70-90)
+        //pastelColor, // Generate a pastel color, H 0-1 (0-360), S 0-1 (60-80), L 0-1 (70-90)
         warm, // Generate a warm color, H 0-1, S 0-1, L 0-1
         cold, // Generate a cold color, H 0-1, S 0-1, L 0-1
         jewel, // Generate a jewel-tone color, H 0-1, S 0-1, B 0-1
