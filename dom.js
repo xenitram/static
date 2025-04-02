@@ -234,9 +234,7 @@ const dom = function() {
             }
         }
 
-        function text(str) {
-            return document.createTextNode(str != null ? str : "");
-        };
+
         // Set other attributes from the args argument
         function setAttribute(attrs) {
             for (let key in attrs) {
@@ -272,6 +270,10 @@ const dom = function() {
         // Return the element with the set attributes, ID, and classes
         return element;
     }
+
+    function text(str) {
+        return document.createTextNode(str != null ? str : "");
+    };
 
     const event = {
         on: (el, ...args) => {
