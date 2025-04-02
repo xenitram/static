@@ -69,7 +69,7 @@ const dom = function() {
 
     const append = last = (target = document.body, ...elements) => {
         const appendTo = (el, els) => {
-            el.append(...els.flat(Infinity));
+            el.append(...els);
             return els;
         };
 
@@ -84,7 +84,7 @@ const dom = function() {
 
     const before = precede = (target = document.body, ...elements) => {
         const insertBefore = (el, els) => {
-            el.before(...els.flat(Infinity));
+            el.before(...els);
             return el;
         };
 
@@ -99,7 +99,7 @@ const dom = function() {
 
     const after = succede = (target = document.body, ...elements) => {
         const insertAfter = (el, els) => {
-            el.after(...els.flat(Infinity));
+            el.after(...els);
             return el;
         };
 
@@ -131,7 +131,7 @@ const dom = function() {
 
     const replaceChildren = (target = document.body, ...elements) => {
         const replace = (el, elems) => {
-            el.replaceChildren(...elems.flat(Infinity));
+            el.replaceChildren(...elems);
             return elems;
         };
 
