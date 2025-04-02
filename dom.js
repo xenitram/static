@@ -142,6 +142,23 @@ const dom = function() {
         }
     };
 
+    function mount(target, ...elements) {
+        if (target.children.length) {
+            target.replaceChildren(...elements);
+        } else {
+            target.append(...elements);
+        }
+        return elements;
+    }
+    mount.first = first
+    mount.last = last
+    mount.before = before
+    mount.after = after
+    mount.detach = detach
+    mount.replaceWith = replaceWith
+    mount.replaceChildren = replaceChildren
+
+
     function html(sel, ...args) {
         // Split the selector string by '.' or '#' into element, id, and classes
         const chunks = sel.split(/([.#@])/);
@@ -217,6 +234,9 @@ const dom = function() {
             }
         }
 
+        function text(str) {
+            return document.createTextNode(str != null ? str : "");
+        };
         // Set other attributes from the args argument
         function setAttribute(attrs) {
             for (let key in attrs) {
@@ -251,11 +271,8 @@ const dom = function() {
 
         // Return the element with the set attributes, ID, and classes
         return element;
-    };
+    }
 
-	function text(str) {
-	  return document.createTextNode(str != null ? str : "");
-	};
     const event = {
         on: (el, ...args) => {
             if (!(el instanceof EventTarget)) throw new TypeError("Provided element is not an EventTarget");
@@ -586,15 +603,6 @@ const dom = function() {
         },
         $,
         $$,
-        mount: {
-            first,
-            last,
-            before,
-            after,
-            detach,
-            replaceWith,
-            replaceChildren
-        },
         first,
         prepend,
         last,
@@ -606,6 +614,7 @@ const dom = function() {
         detach,
         replaceWith,
         replaceChildren,
+        mount,
         create: {
             html,
             svg,
