@@ -1,3 +1,5 @@
+//A Unified Helper Factory
+
 const signal = (function() {
 
 
@@ -60,8 +62,10 @@ const signal = (function() {
     }
 
     function oneWay(selector, observable, options = {}) {
+        let elements = document.querySelectorAll(selector); // Cache elements
+
         function updateElements() {
-            document.querySelectorAll(selector).forEach(elem => {
+            elements.forEach(elem => {
                 if (options.type) elem[options.type] = observable.get();
                 if (options.attribute) elem.setAttribute(options.attribute, observable.get());
                 if (options.className) {
@@ -75,31 +79,39 @@ const signal = (function() {
         }
 
         updateElements();
-        const updateHandler = updateElements;
-        observable.register(updateHandler);
-        return () => observable.unregister(updateHandler);
+        observable.register(updateElements);
+
+        return () => observable.unregister(updateElements);
     }
 
-
-    function twoWay(parent, selector, observable, options = {}) {
-        let unregisterOneWay = oneWay(selector, observable, options);
+    function otherWay(parent, selector, observable, options = {}) {
+        if (!options.event) return () => ({});
 
         let handleUserInput = function(event) {
             let target = event.target.closest(selector);
-            if (!target) return;
+            if (!target || !options.type) return;
+
             let newValue = target[options.type];
 
             if (typeof observable.get() === "number") {
                 newValue = isNaN(parseFloat(newValue)) ? 0 : parseFloat(newValue);
             }
+
             observable.set(newValue, target);
         };
 
         parent.addEventListener(options.event, handleUserInput);
+        return () => parent.removeEventListener(options.event, handleUserInput);
+    }
+
+
+    function twoWay(parent, selector, observable, options = {}) {
+        let unregisterOneWay = oneWay(selector, observable, options);
+        let unregisterOtherWay = otherWay(parent, selector, observable, options);
 
         return () => {
             unregisterOneWay();
-            parent.removeEventListener(options.event, handleUserInput)
+            if (unregisterOtherWay) unregisterOtherWay(); // Ensure it exists before calling
         };
     }
 
@@ -295,8 +307,8 @@ const signal = (function() {
             this.unbindFns.forEach(unbind => unbind());
             this.unbindFns = [];
         }
-    }	
-	
+    }
+
     class ComputedAuto extends Observable {
 
         static activeComputed = null; // Tracks the currently evaluating Computed instance	
@@ -318,7 +330,7 @@ const signal = (function() {
                     this.notify(null, newValue);
                 }
             };
-			
+
             /*this.dependencies.forEach(dep => {
                 const unbind = () => dep.unregister(update);
                 dep.register(this.update);
@@ -328,7 +340,7 @@ const signal = (function() {
         addDependency(observable) {
             if (!this.dependencies.has(observable)) {
                 this.dependencies.add(observable);
-				const unbind = () => observable.unregister(this.update);
+                const unbind = () => observable.unregister(this.update);
                 observable.register(this.update);
                 this.unbindFns.push(unbind);
             }
@@ -354,28 +366,424 @@ const signal = (function() {
             this.unbindFns = [];
         }
     }
+    class ComputedAutoLazy extends Observable {
+        static activeComputed = null; // Tracks the currently evaluating Computed instance	
 
-/*
-    function watchEffect(effectFunction) {
-        const runner = {
-            effect: effectFunction,
-            dependencies: new Set(),
-            update: () => {
-                runner.dependencies.forEach(dep => dep.unregister(runner));
-                runner.dependencies.clear();
-                activeWatcher = runner;
-                effectFunction();
-                activeWatcher = null;
-            },
-            _debugDeps: () => {
-                console.log(`[DEBUG] watchEffect is tracking:`, [...runner.dependencies]);
+        constructor(calculation) {
+            super();
+            this.dependencies = new Set();
+            this.unbindFns = [];
+            this.calculation = calculation;
+            this.dirty = true; // Marks if the value needs recomputation
+            this.cachedValue = undefined; // Stores the last computed value
+
+            this.update = () => {
+                this.dirty = true; // Mark as needing recalculation
+                this.notify(null, this.get()); // Notify subscribers
+            };
+        }
+
+        get() {
+            if (Computed.activeComputed) {
+                Computed.activeComputed.addDependency(this);
             }
-        };
-        runner.update();
-        //return runner._debugDeps;
-        return () => runner._debugDeps();
+            if (this.dirty) {
+                this.recompute();
+            }
+            return this.cachedValue;
+        }
+
+        recompute() {
+            Computed.activeComputed = this; // Start tracking dependencies
+            const newValue = this.calculation();
+            Computed.activeComputed = null; // Stop tracking
+
+            if (!Object.is(newValue, this.cachedValue)) {
+                this.cachedValue = newValue;
+                this.notify(null, newValue);
+            }
+            this.dirty = false; // Mark as up-to-date
+        }
+
+        addDependency(observable) {
+            if (!this.dependencies.has(observable)) {
+                this.dependencies.add(observable);
+                observable.register(this.update);
+                this.unbindFns.push(() => observable.unregister(this.update));
+            }
+        }
+
+        set() {
+            throw new Error("Cannot manually set a computed value.");
+        }
+
+        unbind() {
+            this.unbindFns.forEach(unbind => unbind());
+            this.unbindFns = [];
+        }
+
+        dispose() {
+            this.unbind();
+        }
     }
-*/
+
+    class ComputedAutoLazyDirect extends Observable {
+        static activeComputed = null; // Tracks the currently evaluating Computed instance	
+
+        constructor(calculation) {
+            super();
+            this.dependencies = new Set();
+            this.unbindFns = [];
+            this.calculation = calculation;
+            this.dirty = true; // Marks if the value needs recomputation
+            this.cachedValue = undefined; // Stores the last computed value
+
+            this.update = () => {
+                this.dirty = true; // Mark as needing recalculation
+                this.notify(null, this.get()); // Notify subscribers
+            };
+        }
+
+        get() {
+            if (Computed.activeComputed) {
+                Computed.activeComputed.addDependency(this);
+            }
+            if (this.dirty) {
+                this.recompute();
+            }
+            return this.cachedValue;
+        }
+
+        recompute() {
+            Computed.activeComputed = this; // Start tracking dependencies
+            const newValue = this.calculation();
+            Computed.activeComputed = null; // Stop tracking
+
+            if (!Object.is(newValue, this.cachedValue)) {
+                this.cachedValue = newValue;
+                this.notify(null, newValue);
+            }
+            this.dirty = false; // Mark as up-to-date
+        }
+
+        addDependency(observable) {
+            if (!this.dependencies.has(observable)) {
+                this.dependencies.add(observable);
+                observable.register(this.update);
+                this.unbindFns.push(() => observable.unregister(this.update));
+
+                if (observable instanceof AsyncObservable) {
+                    this.recompute(); // Force immediate evaluation for async
+                }
+            }
+        }
+
+        set() {
+            throw new Error("Cannot manually set a computed value.");
+        }
+
+        unbind() {
+            this.unbindFns.forEach(unbind => unbind());
+            this.unbindFns = [];
+        }
+
+        dispose() {
+            this.unbind();
+        }
+    }
+
+
+    class ComputedAutoLazyTrigger extends Observable {
+        static activeComputed = null; // Tracks the currently evaluating Computed instance	
+
+        constructor(calculation) {
+            super();
+            this.dependencies = new Set();
+            this.unbindFns = [];
+            this.calculation = calculation;
+            this.dirty = true; // Marks if the value needs recomputation
+            this.cachedValue = undefined; // Stores the last computed value
+
+            this.update = async () => {
+                this.dirty = true;
+                if (this.dependencies.some(dep => dep instanceof AsyncObservable)) {
+                    this.get(); // Auto-trigger for async sources
+                }
+                this.notify(null, this.cachedValue);
+            };
+        }
+
+        get() {
+            if (Computed.activeComputed) {
+                Computed.activeComputed.addDependency(this);
+            }
+            if (this.dirty) {
+                this.recompute();
+            }
+            return this.cachedValue;
+        }
+
+        recompute() {
+            Computed.activeComputed = this; // Start tracking dependencies
+            const newValue = this.calculation();
+            Computed.activeComputed = null; // Stop tracking
+
+            if (!Object.is(newValue, this.cachedValue)) {
+                this.cachedValue = newValue;
+                this.notify(null, newValue);
+            }
+            this.dirty = false; // Mark as up-to-date
+        }
+
+        addDependency(observable) {
+            if (!this.dependencies.has(observable)) {
+                this.dependencies.add(observable);
+                observable.register(this.update);
+                this.unbindFns.push(() => observable.unregister(this.update));
+            }
+        }
+
+        set() {
+            throw new Error("Cannot manually set a computed value.");
+        }
+
+        unbind() {
+            this.unbindFns.forEach(unbind => unbind());
+            this.unbindFns = [];
+        }
+
+        dispose() {
+            this.unbind();
+        }
+    }
+
+
+    class ComputedAutoLazyEager extends Observable {
+        static activeComputed = null; // Tracks the currently evaluating Computed instance	
+
+        constructor(calculation) {
+            super();
+            this.dependencies = new Set();
+            this.unbindFns = [];
+            this.calculation = calculation;
+            this.value = undefined; // Store last value
+
+            this.update = async () => {
+                const newValue = await calculation();
+                if (!Object.is(newValue, this.value)) {
+                    this.value = newValue;
+                    this.notify(null, newValue);
+                }
+            };
+
+            this.recompute(); // Always evaluate eagerly
+        }
+
+        get() {
+            if (Computed.activeComputed) {
+                Computed.activeComputed.addDependency(this);
+            }
+            if (this.dirty) {
+                this.recompute();
+            }
+            return this.cachedValue;
+        }
+
+        recompute() {
+            Computed.activeComputed = this; // Start tracking dependencies
+            const newValue = this.calculation();
+            Computed.activeComputed = null; // Stop tracking
+
+            if (!Object.is(newValue, this.cachedValue)) {
+                this.cachedValue = newValue;
+                this.notify(null, newValue);
+            }
+            this.dirty = false; // Mark as up-to-date
+        }
+
+        addDependency(observable) {
+            if (!this.dependencies.has(observable)) {
+                this.dependencies.add(observable);
+                observable.register(this.update);
+                this.unbindFns.push(() => observable.unregister(this.update));
+
+                if (observable instanceof AsyncObservable) {
+                    this.recompute(); // Force immediate evaluation for async
+                }
+            }
+        }
+
+        set() {
+            throw new Error("Cannot manually set a computed value.");
+        }
+
+        unbind() {
+            this.unbindFns.forEach(unbind => unbind());
+            this.unbindFns = [];
+        }
+
+        dispose() {
+            this.unbind();
+        }
+    }
+
+    class ComputedHybrid extends Observable {
+        static activeComputed = null; // Track the currently evaluating Computed instance
+
+        constructor(calculation, options = {}) {
+            super();
+            this.dependencies = new Set();
+            this.unbindFns = [];
+            this.calculation = calculation;
+            this.cachedValue = undefined;
+            this.isStale = true; // Lazy evaluation: mark stale until needed
+            this.isAsync = false; // Flag for async handling
+
+            Computed.activeComputed = this;
+            try {
+                let result = calculation();
+                if (result instanceof Promise) {
+                    this.isAsync = true;
+                    result.then(value => {
+                        this.cachedValue = value;
+                        this.isStale = false;
+                        this.notify(null, value);
+                    });
+                } else {
+                    this.cachedValue = result;
+                    this.isStale = false;
+                }
+            } catch (error) {
+                console.error("Computed evaluation failed:", error);
+            }
+            Computed.activeComputed = null;
+
+            this.update = () => {
+                try {
+                    let result = this.calculation();
+                    if (result instanceof Promise) {
+                        this.isAsync = true;
+                        result.then(value => {
+                            if (!Object.is(value, this.cachedValue)) {
+                                this.cachedValue = value;
+                                this.notify(null, value);
+                            }
+                        });
+                    } else if (!Object.is(result, this.cachedValue)) {
+                        this.cachedValue = result;
+                        this.notify(null, result);
+                    }
+                } catch (error) {
+                    console.error("Computed update failed:", error);
+                }
+            };
+        }
+
+        get() {
+            if (this.isStale) {
+                this.update(); // Lazy evaluation
+            }
+            return this.cachedValue;
+        }
+
+        addDependency(observable) {
+            if (!this.dependencies.has(observable)) {
+                this.dependencies.add(observable);
+                observable.register(this.update);
+                this.unbindFns.push(() => observable.unregister(this.update));
+            }
+        }
+
+        set() {
+            throw new Error("Cannot manually set a computed value.");
+        }
+
+        unbind() {
+            this.unbindFns.forEach(unbind => unbind());
+            this.unbindFns = [];
+        }
+
+        dispose() {
+            this.unbind();
+            this.unbindFns.forEach(unbind => unbind());
+            this.unbindFns = [];
+        }
+    }
+    class ComputedVueLike extends Observable {
+        static activeComputed = null;
+
+        constructor(calculation) {
+            super();
+            this.dependencies = new Set();
+            this.unbindFns = [];
+            this.calculation = calculation;
+            this.cachedValue = undefined;
+            this.isDirty = true; // Marks if recomputation is needed
+
+            // Lazy evaluation setup
+            this.update = () => {
+                this.isDirty = true; // Mark for recomputation
+                this.notify(null, this.cachedValue);
+            };
+        }
+
+        get() {
+            if (this.isDirty) {
+                Computed.activeComputed = this;
+                const newValue = this.calculation();
+                Computed.activeComputed = null;
+
+                if (!Object.is(newValue, this.cachedValue)) {
+                    this.cachedValue = newValue;
+                    this.notify(null, newValue);
+                }
+
+                this.isDirty = false; // Mark as up-to-date
+            }
+
+            return this.cachedValue;
+        }
+
+        addDependency(observable) {
+            if (!this.dependencies.has(observable)) {
+                this.dependencies.add(observable);
+                observable.register(this.update);
+                this.unbindFns.push(() => observable.unregister(this.update));
+            }
+        }
+
+        set() {
+            throw new Error("Cannot manually set a computed value.");
+        }
+
+        dispose() {
+            this.unbindFns.forEach(unbind => unbind());
+            this.unbindFns = [];
+            this.dependencies.clear();
+        }
+    }
+
+    /*
+        function watchEffect(effectFunction) {
+            const runner = {
+                effect: effectFunction,
+                dependencies: new Set(),
+                update: () => {
+                    runner.dependencies.forEach(dep => dep.unregister(runner));
+                    runner.dependencies.clear();
+                    activeWatcher = runner;
+                    effectFunction();
+                    activeWatcher = null;
+                },
+                _debugDeps: () => {
+                    console.log(`[DEBUG] watchEffect is tracking:`, [...runner.dependencies]);
+                }
+            };
+            runner.update();
+            //return runner._debugDeps;
+            return () => runner._debugDeps();
+        }
+    */
     function watch(source, callback) {
         let oldValue = source.get();
         const watcher = {
@@ -390,45 +798,45 @@ const signal = (function() {
         source.register(watcher.update);
         return () => source.unregister(watcher.update);
     }
-/*
-    function ref(initialValue) {
-        const r = {
-            _value: initialValue,
-            _dep: new Set(),
-            get value() {
-                if (activeWatcher) {
-                    r._dep.add(activeWatcher);
-                    activeWatcher.dependencies.add(() => r._dep.delete(activeWatcher));
-                }
-                return r._value;
-            },
-            set value(newValue) {
-                if (r._value !== newValue) {
-                    r._value = newValue;
-                    const oldDeps = [...r._dep];
-                    r._dep.clear(); // Clear old dependencies before notifying watchers
-                    oldDeps.forEach(watcher => watcher.update());
-                }
-            }
-        };
-        return r;
-    }
-
-    function toRefs(reactiveObj) {
-        const refs = {};
-        for (const key in reactiveObj) {
-            refs[key] = {
+    /*
+        function ref(initialValue) {
+            const r = {
+                _value: initialValue,
+                _dep: new Set(),
                 get value() {
-                    return reactiveObj[key];
+                    if (activeWatcher) {
+                        r._dep.add(activeWatcher);
+                        activeWatcher.dependencies.add(() => r._dep.delete(activeWatcher));
+                    }
+                    return r._value;
                 },
                 set value(newValue) {
-                    reactiveObj[key] = newValue;
+                    if (r._value !== newValue) {
+                        r._value = newValue;
+                        const oldDeps = [...r._dep];
+                        r._dep.clear(); // Clear old dependencies before notifying watchers
+                        oldDeps.forEach(watcher => watcher.update());
+                    }
                 }
             };
+            return r;
         }
-        return refs;
-    }
-*/
+
+        function toRefs(reactiveObj) {
+            const refs = {};
+            for (const key in reactiveObj) {
+                refs[key] = {
+                    get value() {
+                        return reactiveObj[key];
+                    },
+                    set value(newValue) {
+                        reactiveObj[key] = newValue;
+                    }
+                };
+            }
+            return refs;
+        }
+    */
     function eagerReactive(target) {
         if (typeof target !== "object" || target === null) {
             throw new Error("reactive() can only be used on objects");
