@@ -101,16 +101,16 @@ const dom = function() {
     const attr = {
         set: (el, attrs, namespace = null) => {
             Object.entries(attrs).forEach(([key, value]) => {
-                if (el instanceof HTMLElement && key in el) {
+                /*if (el instanceof HTMLElement && key in el) {
                     // If it's a known property, set it directly
                     el[key] = value;
-                } else {
+                } else {*/
                     if (namespace) {
                         el.setAttributeNS(namespace, key, value);
                     } else {
                         el.setAttribute(key, value);
                     }
-                }
+                /*}*/
             });
             return el;
         },
