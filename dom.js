@@ -103,7 +103,7 @@ const dom = function() {
             Object.entries(attrs).forEach(([key, value]) => {
                 if (el instanceof HTMLElement && key in el) {
                     // If it's a known property, set it directly
-                    element[key] = value;
+                    el[key] = value;
                 } else {
                     if (namespace) {
                         el.setAttributeNS(namespace, key, value);
