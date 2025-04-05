@@ -1,10 +1,12 @@
 const dom = function() {
 
-    const byId = (lbl) => {
-        if (!lbl || typeof lbl !== 'string') {
-            throw new Error("Invalid argument: `lbl` must be a non-empty string");
+    const isElement = (el) => el instanceof Element || el instanceof Document;
+
+    const byId = (id) => {
+        if (typeof id !== 'string' || !id.trim()) {
+            throw new Error("Invalid id: must be a non-empty string");
         }
-        return document.getElementById(lbl);
+        return document.getElementById(id);
     };
 
     const byName = (lbl) => {
@@ -13,6 +15,7 @@ const dom = function() {
         }
         return document.getElementsByName(lbl);
     };
+
 
     const byClass = (el = document, lbl) =>
         lbl !== undefined ?
@@ -28,8 +31,6 @@ const dom = function() {
         lbl !== undefined ?
         el.getElementsByTagNameNS(lbl) :
         (lbl) => el.getElementsByTagNameNS(lbl);
-
-
 
     const $ = (el = document, lbl) =>
         typeof el === 'string' ?
@@ -50,105 +51,44 @@ const dom = function() {
         :
         (selector) => el.querySelectorAll(selector); // Called with just a context: $$(container)
 
+    const first = prepend = (el = document.body, ...elems) => (elems.length ? el.prepend(...elems.flat(Infinity)) : (...e) => el.prepend(...e.flat(Infinity)));
+    const last = append = (el = document.body, ...elems) => elems.length ? el.append(...elems.flat(Infinity)) : (...e) => el.append(...e.flat(Infinity));
 
+    const before = (el = document.body, ...elems) => elems.length ? el.before(...elems.flat(Infinity)) : (...e) => el.before(...e.flat(Infinity));
 
-    const prepend = first = (target = document.body, ...elements) => {
-        const prependTo = (el, els) => {
-            el.prepend(...els.flat(Infinity));
-            return els;
-        };
+    const after = (el = document.body, ...elems) => elems.length ? el.after(...elems.flat(Infinity)) : (...e) => el.after(...e.flat(Infinity));
 
+    const detach /*=remove*/ = (el = document.body) => el.remove();
+
+    const replaceWith = (el = document.body, elem) => elem ? el.replaceWith(elem) : e => el.replaceWith(e);
+
+    const replaceChildren = (el = document.body, ...elems) => elems.length ? el.replaceChildren(...elems.flat(Infinity)) : (...e) => el.replaceChildren(...e.flat(Infinity));
+
+    /*function mount(target = document.body, ...elements) {
         if (elements.length) {
-            return prependTo(target, elements);
-        } else if (Array.isArray(target)) {
-            return prependTo(document.body, target);
+            if (target.children.length) {
+                target.replaceChildren(...elements);
+            } else {
+                target.append(...elements);
+            }
+            return elements;
         } else {
-            return (...elems) => prependTo(target, elems);
+            return (...elems) => {
+                if (target.children.length) {
+                    target.replaceChildren(...elems);
+                } else {
+                    target.append(...elems);
+                }
+                return elems;
+            };
         }
-    };
+    }
+    */
 
-    const append = last = (target = document.body, ...elements) => {
-        const appendTo = (el, els) => {
-            el.append(...els);
-            return els;
-        };
-
-        if (elements.length) {
-            return appendTo(target, elements);
-        } else if (Array.isArray(target)) {
-            return appendTo(document.body, target);
-        } else {
-            return (...elems) => appendTo(target, elems);
-        }
-    };
-
-    const before = precede = (target = document.body, ...elements) => {
-        const insertBefore = (el, els) => {
-            el.before(...els);
-            return el;
-        };
-
-        if (elements.length) {
-            return insertBefore(target, elements);
-        } else if (Array.isArray(target)) {
-            return insertBefore(document.body, target);
-        } else {
-            return (...elems) => insertBefore(target, elems);
-        }
-    };
-
-    const after = succede = (target = document.body, ...elements) => {
-        const insertAfter = (el, els) => {
-            el.after(...els);
-            return el;
-        };
-
-        if (elements.length) {
-            return insertAfter(target, elements);
-        } else if (Array.isArray(target)) {
-            return insertAfter(document.body, target);
-        } else {
-            return (...elems) => insertAfter(target, elems);
-        }
-    };
-
-
-    const detach = (target = document.body) => target.remove();
-
-    const replaceWith = (el = document.body, elem) => {
-        const doReplace = (replacement) => {
-            const newElem = typeof replacement === 'string' ?
-                document.createRange().createContextualFragment(replacement) :
-                replacement;
-
-            el.replaceWith(newElem);
-            return el; // Return the replaced element for chaining
-        };
-
-        return elem ? doReplace(elem) : doReplace;
-    };
-
-
-    const replaceChildren = (target = document.body, ...elements) => {
-        const replace = (el, elems) => {
-            el.replaceChildren(...elems);
-            return elems;
-        };
-
-        if (elements.length) {
-            return replace(target, elements);
-        } else {
-            return (elems) => replace(target, elems);
-        }
-    };
-
-    function mount(target, ...elements) {
-        if (target.children.length) {
-            target.replaceChildren(...elements);
-        } else {
-            target.append(...elements);
-        }
-        return elements;
+    function mount(target = document.body, ...elements) {
+        return elements.length ?
+            (target.children.length ? target.replaceChildren(...elements) : target.append(...elements), elements) :
+            (...elems) => (target.children.length ? target.replaceChildren(...elems) : target.append(...elems), elems);
     }
     mount.first = first
     mount.last = last
@@ -157,6 +97,57 @@ const dom = function() {
     mount.detach = detach
     mount.replaceWith = replaceWith
     mount.replaceChildren = replaceChildren
+
+    const attr = {
+        set: (el, attrs, namespace = null) => {
+            Object.entries(attrs).forEach(([key, value]) => {
+                if (el instanceof HTMLElement && key in el) {
+                    // If it's a known property, set it directly
+                    element[key] = value;
+                } else {
+                    if (namespace) {
+                        el.setAttributeNS(namespace, key, value);
+                    } else {
+                        el.setAttribute(key, value);
+                    }
+                }
+            });
+            return el;
+        },
+
+
+        get: (el, attrName, namespace = null) => {
+            return namespace ? el.getAttributeNS(namespace, attrName) : el.getAttribute(attrName);
+        },
+
+        remove: (el, attrNames, namespace = null) => {
+            attrNames.flat().forEach(attrName => {
+                if (namespace) {
+                    el.removeAttributeNS(namespace, attrName);
+                } else {
+                    el.removeAttribute(attrName);
+                }
+            });
+            return el;
+        },
+
+        has: (el, attrName, namespace = null) => {
+            return namespace ? el.hasAttributeNS(namespace, attrName) : el.hasAttribute(attrName);
+        },
+
+        toggle: (el, attrName, value = null, namespace = null) => {
+            if (namespace ? el.hasAttributeNS(namespace, attrName) : el.hasAttribute(attrName)) {
+                namespace ? el.removeAttributeNS(namespace, attrName) : el.removeAttribute(attrName);
+            } else {
+                namespace
+                    ?
+                    el.setAttributeNS(namespace, attrName, value !== null ? value : "") :
+                    el.setAttribute(attrName, value !== null ? value : "");
+            }
+            return el;
+        }
+    };
+
 
 
     function html(sel, ...args) {
@@ -181,19 +172,6 @@ const dom = function() {
             }
         }
 
-        // Set other attributes from the attrs argument
-        function setAttribute(attrs) {
-            for (let val in attrs) {
-                if (val in element) {
-                    // If it's a known property, set it directly
-                    element[val] = attrs[val];
-                } else {
-                    // Otherwise, use setAttribute to set it as an attribute
-                    element.setAttribute(val, attrs[val]);
-                }
-            }
-        }
-
         args.forEach(arg => {
             // Append the content (arg) to the element
             if (arg instanceof Node) {
@@ -203,7 +181,8 @@ const dom = function() {
             } else if (typeof arg === "string" || typeof arg === "number") {
                 element.append(document.createTextNode(arg));
             } else if (typeof arg === "object") {
-                setAttribute(arg);
+                //setAttribute(element,arg);
+                attr.set(element, arg);
             }
         });
         // Return the element with the set attributes, ID, and classes
@@ -234,22 +213,6 @@ const dom = function() {
             }
         }
 
-
-        // Set other attributes from the args argument
-        function setAttribute(attrs) {
-            for (let key in attrs) {
-                if (attrs.hasOwnProperty(key)) {
-                    // Use `setAttributeNS` for SVG-specific attributes (like `xlink:href`)
-                    if (key === 'xlink:href') {
-                        element.setAttributeNS("http://www.w3.org/1999/xlink", key, attrs[key]);
-                    } else {
-                        element.setAttribute(key, attrs[key]);
-                    }
-                }
-            }
-        }
-
-
         // Iterate through args to append content or set attributes
         args.forEach(arg => {
             if (arg instanceof Node) {
@@ -263,7 +226,8 @@ const dom = function() {
                 element.append(document.createTextNode(arg));
             } else if (typeof arg === "object") {
                 // Handle object as attributes
-                setAttribute(arg);
+                //setAttribute(element,arg);
+                attr.set(element, arg, 'http://www.w3.org/1999/xlink');
             }
         });
 
@@ -275,46 +239,32 @@ const dom = function() {
         return document.createTextNode(str != null ? str : "");
     };
 
+    // class Event{} to be implemented;
+
+
     const event = {
         on: (el, ...args) => {
-            if (!(el instanceof EventTarget)) throw new TypeError("Provided element is not an EventTarget");
-
-            const fn = (...a) => {
-                if (typeof a[0] === 'string') {
-                    el.addEventListener(...a);
-                } else if (a[0] && typeof a[0] === 'object') {
-                    Object.entries(a[0]).forEach(([k, v]) => el.addEventListener(k, v));
-                }
-                return el;
-            };
+            const fn = (...a) => typeof a[0] === 'string' ? el.addEventListener(...a) : Object.entries(a[0]).forEach(([k, v]) => el.addEventListener(k, v));
             return args.length ? fn(...args) : fn;
         },
         off: (el, ...args) => {
-            if (!(el instanceof EventTarget)) throw new TypeError("Provided element is not an EventTarget");
-
-            const fn = (...a) => {
-                if (typeof a[0] === 'string') {
-                    el.removeEventListener(...a);
-                } else if (a[0] && typeof a[0] === 'object') {
-                    Object.entries(a[0]).forEach(([k, v]) => el.removeEventListener(k, v));
-                }
-                return el;
-            };
+            const fn = (...a) => typeof a[0] === 'string' ? el.removeEventListener(...a) : Object.entries(a[0]).forEach(([k, v]) => el.removeEventListener(k, v));
             return args.length ? fn(...args) : fn;
         },
-        fire: (el, arg) => {
-            if (el instanceof EventTarget) {
-                el.dispatchEvent(new Event(arg));
-                return el;
-            }
-            return (e) => {
-                if (!(e instanceof EventTarget)) throw new TypeError("Provided element is not an EventTarget");
-                e.dispatchEvent(new Event(arg));
-                return e;
-            };
-        }
-    };
 
+        fire: (el, name, detail = {}) => {
+            const fn = (name, detail) => {
+                if (!name || typeof name !== 'string') {
+                    throw new Error("Invalid event name: must be a non-empty string.");
+                }
+                el.dispatchEvent(new CustomEvent(name, {
+                    detail
+                }))
+            };
+            return (name) ? fn(name, detail) : fn;
+        },
+
+    };
 
     function animate(nodes, action, onEnd, o = {}) {
 
@@ -492,22 +442,22 @@ const dom = function() {
     }
 
     const css = {
-        addClass: (el, ...classes) => {
+        add: (el, ...classes) => {
             el.classList.add(...classes.flat());
             return el;
         },
 
-        removeClass: (el, ...classes) => {
+        remove: (el, ...classes) => {
             el.classList.remove(...classes.flat());
             return el;
         },
 
-        toggleClass: (el, className, force) => {
+        toggle: (el, className, force) => {
             el.classList.toggle(className, force);
             return el;
         },
 
-        hasClass: (el, className) => {
+        has: (el, className) => {
             return el.classList.contains(className);
         },
 
@@ -541,52 +491,27 @@ const dom = function() {
         }
     };
 
-    const attr = {
-        setAttr: (el, attrs) => {
-            Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
-            return el;
-        },
 
-        getAttr: (el, attrName) => {
-            return el.getAttribute(attrName);
-        },
 
-        removeAttr: (el, ...attrNames) => {
-            attrNames.flat().forEach(attrName => el.removeAttribute(attrName));
-            return el;
-        },
-
-        hasAttr: (el, attrName) => {
-            return el.hasAttribute(attrName);
-        },
-
-        toggleAttr: (el, attrName, value = null) => {
-            if (el.hasAttribute(attrName)) {
-                el.removeAttribute(attrName);
-            } else {
-                el.setAttribute(attrName, value !== null ? value : "");
-            }
-            return el;
-        }
-    };
 
     const dataAttr = {
-        setData: (el, key, value) => {
+        set: (el, key, value) => {
             el.dataset[key] = value;
             return el;
         },
 
-        getData: (el, key) => {
+        get: (el, key) => {
             return el.dataset[key];
         },
 
-        removeData: (el, key) => {
+        remove: (el, key) => {
             delete el.dataset[key];
             return el;
         },
     };
 
     return {
+        isElement,
         get: {
             byId,
             byName,
@@ -605,18 +530,24 @@ const dom = function() {
         },
         $,
         $$,
+        mount
+        /*: {
+                    first,
+                    last,
+                    before,
+                    after,
+                    detach,
+                    replaceWith,
+                    replaceChildren
+                }*/
+        ,
         first,
-        prepend,
         last,
-        append,
         before,
-        precede,
         after,
-        succede,
         detach,
         replaceWith,
         replaceChildren,
-        mount,
         create: {
             html,
             svg,
