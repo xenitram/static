@@ -104,7 +104,6 @@ const signal = (function() {
         return () => parent.removeEventListener(options.event, handleUserInput);
     }
 
-
     function twoWay(parent, selector, observable, options = {}) {
         let unregisterOneWay = oneWay(selector, observable, options);
         let unregisterOtherWay = otherWay(parent, selector, observable, options);
@@ -957,6 +956,13 @@ const signal = (function() {
         DebounceObservable,
         AsyncObservable,
         Computed,
+        ComputedAuto,
+		ComputedAutoLazy,
+		ComputedAutoLazyDirect,
+		ComputedAutoLazyEager,
+		ComputedAutoLazyTrigger,
+		ComputedHybrid,
+		ComputedVueLike,
         observable,
         debounceObservable,
         asyncObservable,
