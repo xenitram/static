@@ -64,7 +64,7 @@ const dom = function() {
 
     const replaceChildren = (el = document.body, ...elems) => elems.length ? el.replaceChildren(...elems.flat(Infinity)) : (...e) => el.replaceChildren(...e.flat(Infinity));
 
-    /*function mount(target = document.body, ...elements) {
+    function mount(target = document.body, ...elements) {
         if (elements.length) {
             if (target.children.length) {
                 target.replaceChildren(...elements);
@@ -83,13 +83,14 @@ const dom = function() {
             };
         }
     }
-    */
+    
 
-    function mount(target = document.body, ...elements) {
+   /* function mount(target = document.body, ...elements) {
         return elements.length ?
             (target.children.length ? target.replaceChildren(...elements) : target.append(...elements), elements) :
             (...elems) => (target.children.length ? target.replaceChildren(...elems) : target.append(...elems), elems);
     }
+	*/
     mount.first = first
     mount.last = last
     mount.before = before
