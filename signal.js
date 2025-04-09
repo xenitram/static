@@ -61,60 +61,95 @@ const signal = (function() {
         }
     }
 
-    function oneWay(selector, observable, options = {}) {
-        let elements = document.querySelectorAll(selector); // Cache elements
+function oneWay(observable, target, options = {}) {
+    let elements = [];
+    let observer = null;
 
-        function updateElements() {
-            elements.forEach(elem => {
-                if (options.type) elem[options.type] = observable.get();
-                if (options.attribute) elem.setAttribute(options.attribute, observable.get());
-                if (options.className) {
-                    observable.get() ? elem.classList.add(options.className) : elem.classList.remove(options.className);
-                }
-                if (options.style) elem.style[options.style] = observable.get();
-                if (options.animation) {
-                    applyAnimation(elem, options.animation);
-                }
-            });
+    const updateElements = () => {
+        const value = observable.get();
+        elements.forEach(elem => {
+            if (options.type) elem[options.type] = value;
+            if (options.attribute) elem.setAttribute(options.attribute, value);
+            if (options.className) {
+                value ? elem.classList.add(options.className) : elem.classList.remove(options.className);
+            }
+            if (options.style) elem.style[options.style] = value;
+            if (options.animation) applyAnimation(elem, options.animation);
+        });
+    };
+
+    const refreshElements = () => {
+        if (typeof target === "string") {
+            elements = Array.from(document.querySelectorAll(target));
+        }
+        updateElements();
+    };
+
+    if (typeof target === "string") {
+        refreshElements();
+
+        observer = new MutationObserver(() => {
+            refreshElements();
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    } else if (target instanceof Element) {
+        elements = [target];
+        updateElements();
+    } else if (Array.isArray(target) || target instanceof NodeList) {
+        elements = Array.from(target);
+        updateElements();
+    } else {
+        throw new Error("Invalid target for oneWay");
+    }
+
+    observable.register(updateElements);
+
+    return () => {
+        observable.unregister(updateElements);
+        if (observer) observer.disconnect();
+    };
+}
+
+function otherWay(observable, target, options = {}, parent = document) {
+    if (!options.event) return () => ({});
+
+    const elements = typeof target === "string"
+        ? () => parent.querySelectorAll(target)
+        : () => (Array.isArray(target) || target instanceof NodeList ? target : [target]);
+
+    function handleUserInput(event) {
+        const allElements = elements();
+        let targetElem = event.target;
+
+        while (targetElem && ![...allElements].includes(targetElem)) {
+            targetElem = targetElem.parentElement;
         }
 
-        updateElements();
-        observable.register(updateElements);
+        if (!targetElem || !options.type) return;
 
-        return () => observable.unregister(updateElements);
+        let newValue = targetElem[options.type];
+        if (typeof observable.get() === "number") {
+            newValue = isNaN(parseFloat(newValue)) ? 0 : parseFloat(newValue);
+        }
+
+        observable.set(newValue, targetElem);
     }
 
-    function otherWay(parent, selector, observable, options = {}) {
-        if (!options.event) return () => ({});
-
-        let handleUserInput = function(event) {
-            let target = event.target.closest(selector);
-            if (!target || !options.type) return;
-
-            let newValue = target[options.type];
-
-            if (typeof observable.get() === "number") {
-                newValue = isNaN(parseFloat(newValue)) ? 0 : parseFloat(newValue);
-            }
-
-            observable.set(newValue, target);
-        };
-
-        parent.addEventListener(options.event, handleUserInput);
-        return () => parent.removeEventListener(options.event, handleUserInput);
-    }
-
-    function twoWay(parent, selector, observable, options = {}) {
-        let unregisterOneWay = oneWay(selector, observable, options);
-        let unregisterOtherWay = otherWay(parent, selector, observable, options);
-
-        return () => {
-            unregisterOneWay();
-            if (unregisterOtherWay) unregisterOtherWay(); // Ensure it exists before calling
-        };
-    }
+    parent.addEventListener(options.event, handleUserInput);
+    return () => parent.removeEventListener(options.event, handleUserInput);
+}
 
 
+function twoWay(observable, target, options = {}, parent = document) {
+    const unregisterOneWay = oneWay(target, observable, options);
+    const unregisterOtherWay = otherWay(target, observable, options, parent);
+
+    return () => {
+        unregisterOneWay();
+        unregisterOtherWay();
+    };
+}
     class Observer {
         constructor() {
             this.listeners = [];
@@ -181,8 +216,8 @@ const signal = (function() {
             return this.value;
         }
 
-        bind(parent, selector, options) {
-            const unbind = twoWay(parent, selector, this, options);
+        bind(selector, options, parent ) {
+            const unbind = twoWay(this, selector, options, parent);
             this.unbindFns.push(unbind); // Store unbind function
             return this;
         }
@@ -291,7 +326,7 @@ const signal = (function() {
         }
 
         bind(selector, options) {
-            const unbind = oneWay(selector, this, options);
+            const unbind = oneWay(this, selector, options);
             this.unbindFns.push(unbind);
             return this;
         }
@@ -349,7 +384,7 @@ const signal = (function() {
         }
 
         bind(selector, options) {
-            const unbind = oneWay(selector, this, options);
+            const unbind = oneWay(this, selector, options);
             this.unbindFns.push(unbind);
             return this;
         }
@@ -415,7 +450,13 @@ const signal = (function() {
         set() {
             throw new Error("Cannot manually set a computed value.");
         }
-
+	    
+        bind(selector, options) {
+            const unbind = oneWay(this, selector, options);
+            this.unbindFns.push(unbind);
+            return this;
+        }
+	    
         unbind() {
             this.unbindFns.forEach(unbind => unbind());
             this.unbindFns = [];
@@ -481,6 +522,12 @@ const signal = (function() {
             throw new Error("Cannot manually set a computed value.");
         }
 
+        bind(selector, options) {
+            const unbind = oneWay(this, selector, options);
+            this.unbindFns.push(unbind);
+            return this;
+        }
+	    
         unbind() {
             this.unbindFns.forEach(unbind => unbind());
             this.unbindFns = [];
@@ -545,7 +592,13 @@ const signal = (function() {
         set() {
             throw new Error("Cannot manually set a computed value.");
         }
-
+	    
+        bind(selector, options) {
+            const unbind = oneWay(this, selector, options);
+            this.unbindFns.push(unbind);
+            return this;
+        }
+	    
         unbind() {
             this.unbindFns.forEach(unbind => unbind());
             this.unbindFns = [];
@@ -616,6 +669,12 @@ const signal = (function() {
             throw new Error("Cannot manually set a computed value.");
         }
 
+        bind(selector, options) {
+            const unbind = oneWay(this, selector, options);
+            this.unbindFns.push(unbind);
+            return this;
+        }
+	    
         unbind() {
             this.unbindFns.forEach(unbind => unbind());
             this.unbindFns = [];
@@ -697,6 +756,12 @@ const signal = (function() {
             throw new Error("Cannot manually set a computed value.");
         }
 
+        bind(selector, options) {
+            const unbind = oneWay(this, selector, options);
+            this.unbindFns.push(unbind);
+            return this;
+        }
+	    
         unbind() {
             this.unbindFns.forEach(unbind => unbind());
             this.unbindFns = [];
